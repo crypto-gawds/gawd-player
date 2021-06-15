@@ -1,0 +1,70 @@
+<html>
+
+<head>
+  <title>Spatial Media Viewer Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      font-family: Helvetica, Arial, sans-serif;
+      text-align: center;
+    }
+
+    a {
+      color: #ff00ff;
+      text-decoration: none
+    }
+
+    video {
+      display: none;
+    }
+
+    #info {
+      position: absolute;
+      top: 15px;
+      width: 100%;
+    }
+
+    #gawd-container {
+      margin: 80px auto;
+      width: 480;
+      height: 640;
+      background: #ff00ff;
+
+      border: 10px solid black;
+      background: linear-gradient(to top, rgba(#cffffe, 0.3), rgba(#f9f7d9, 0.3), rgba(#fce2ce, 0.3), rgba(#ffc1f3, 0.3));
+      border-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='100' height='100' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E %3ClinearGradient id='g' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23cffffe' /%3E%3Cstop offset='25%25' stop-color='%23f9f7d9' /%3E%3Cstop offset='50%25' stop-color='%23fce2ce' /%3E%3Cstop offset='100%25' stop-color='%23ffc1f3' /%3E%3C/linearGradient%3E %3Cpath d='M1.5 1.5 l97 0l0 97l-97 0 l0 -97' stroke-linecap='square' stroke='url(%23g)' stroke-width='3'/%3E %3C/svg%3E") 1;
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+    integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"
+    integrity="sha512-LF8ZB1iTwi4Qvkm4pekHG4a437Y9Af5ZuwbnW4GTbAWQeR2E4KW8WF+xH8b9psevV7wIlDMx1MH9YfPqgKhA/Q=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://caseypugh.github.io/three-spatial-viewer/dist/three-spatial-viewer.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+  <script src="../dist/gawd-player.js"></script>
+</head>
+
+<body>
+
+  <div id="gawd-container"></div>
+  <!-- <video id="video" crossOrigin="anonymous" muted autoplay loop playsinline src="" /> -->
+
+  <script>
+    'use strict';
+    new CryptoGawd.Player({
+      container: document.getElementById('gawd-container'),
+      url: "https://crypto-gawds.s3.amazonaws.com/gawds/aaa45753818e51346c96aece04e9fb15db99391ce8bb009f0c1703138ceccba1/Wild-Eccentric-Increate.json"
+    });
+  </script>
+</body>
+
+</html>
