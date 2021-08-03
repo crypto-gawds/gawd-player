@@ -112,7 +112,7 @@ class Player {
   initGawd(gawd) {
     console.log("Loading ".concat(gawd.name, "..."));
     var lkgAssets = gawd.assets.filter(function (a) {
-      return a.spatial == 'lookingglass';
+      return a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare';
     });
     this.initMedia(lkgAssets[0]);
   }

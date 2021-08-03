@@ -17,6 +17,7 @@ class GawdAsset {
   public url: string
   public spatial: string
   public quilt: GawdQuilt
+  public quiltType: string
   public size: Resolution
   public viewSize: Resolution
   public contentType: string
@@ -103,7 +104,7 @@ export default class Player {
 
   private initGawd(gawd: Gawd): void {
     console.log(`Loading ${gawd.name}...`)
-    let lkgAssets: GawdAsset[] = gawd.assets.filter(a => a.spatial == 'lookingglass')
+    let lkgAssets: GawdAsset[] = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare')
     this.initMedia(lkgAssets[0])
   }
 
@@ -116,6 +117,7 @@ export default class Player {
       }.bind(this))
     }
     else if (asset.contentType == 'video/mp4') {
+      // TODO
     }
   }
 

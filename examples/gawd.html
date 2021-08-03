@@ -32,13 +32,24 @@
 
     #gawd-container {
       margin: 80px auto;
-      width: 480;
-      height: 640;
-      background: #ff00ff;
+      width: 540;
+      height: 540;
+      /* background: #ff00ff; */
 
-      border: 10px solid black;
+      border: 10px solid #fff;
+      
       background: linear-gradient(to top, rgba(#cffffe, 0.3), rgba(#f9f7d9, 0.3), rgba(#fce2ce, 0.3), rgba(#ffc1f3, 0.3));
-      border-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='100' height='100' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E %3ClinearGradient id='g' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23cffffe' /%3E%3Cstop offset='25%25' stop-color='%23f9f7d9' /%3E%3Cstop offset='50%25' stop-color='%23fce2ce' /%3E%3Cstop offset='100%25' stop-color='%23ffc1f3' /%3E%3C/linearGradient%3E %3Cpath d='M1.5 1.5 l97 0l0 97l-97 0 l0 -97' stroke-linecap='square' stroke='url(%23g)' stroke-width='3'/%3E %3C/svg%3E") 1;
+      /* border-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='100' height='100' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E %3ClinearGradient id='g' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23cffffe' /%3E%3Cstop offset='25%25' stop-color='%23f9f7d9' /%3E%3Cstop offset='50%25' stop-color='%23fce2ce' /%3E%3Cstop offset='100%25' stop-color='%23ffc1f3' /%3E%3C/linearGradient%3E %3Cpath d='M1.5 1.5 l97 0l0 97l-97 0 l0 -97' stroke-linecap='square' stroke='url(%23g)' stroke-width='3'/%3E %3C/svg%3E") 1; */
+      position: relative;
+      overflow: hidden;
+      border-radius: 50%;
+    }
+
+    #gawd-container canvas {
+      display: inline;
+      margin: 0 auto;
+      height: 100%;
+      width: auto;
     }
   </style>
 
@@ -62,7 +73,7 @@
     'use strict';
     new CryptoGawd.Player({
       container: document.getElementById('gawd-container'),
-      url: "https://crypto-gawds.s3.amazonaws.com/gawds/aaa45753818e51346c96aece04e9fb15db99391ce8bb009f0c1703138ceccba1/Wild-Eccentric-Increate.json"
+      url: "https://crypto-gawds.s3.amazonaws.com/staging/gawds/121e411f6110503c3b03ee05c23e0028b73f81efdf7e170466cc218c37e4168a/config.json"
     });
   </script>
 </body>
