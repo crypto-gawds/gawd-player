@@ -1,1 +1,1 @@
-export { Player as SpatialPlayer, QuiltConfig, SpatialType, StereoMode, } from 'three-spatial-viewer';
+export { Player as SpatialPlayer, QuiltConfig, SpatialType, StereoMode, Props as SpatialProps } from 'three-spatial-viewer';

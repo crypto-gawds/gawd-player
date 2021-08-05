@@ -1,6 +1,8 @@
+import { SpatialProps } from './spatial-viewer';
 declare class Props {
     url: string;
     container: HTMLElement;
+    spatialProps: SpatialProps;
 }
 declare class Gawd {
     name: string;
@@ -30,7 +32,7 @@ export default class Player {
     private renderer;
     private spatialPlayer;
     private camera;
-    constructor(props?: object);
+    constructor(props?: Props);
     private initThree;
     private render;
     private onMouseMove;

@@ -1,1 +1,1 @@
-export { PerspectiveCamera, WebGLRenderer, Scene, ImageLoader, TextureLoader, Texture } from 'three';
+export { PerspectiveCamera, WebGLRenderer, Scene, ImageLoader, TextureLoader, Texture, VideoTexture } from 'three';
