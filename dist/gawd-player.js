@@ -375,6 +375,7 @@
         video.autoplay = true;
         video.loop = true;
         video.playsInline = true;
+        video.style.display = "none";
         document.body.appendChild(video);
         video.play();
         var videoTex = new three.VideoTexture(video);
@@ -423,30 +424,6 @@
 
   }
 
-  Object.defineProperty(exports, 'QuiltConfig', {
-    enumerable: true,
-    get: function () {
-      return threeSpatialViewer.QuiltConfig;
-    }
-  });
-  Object.defineProperty(exports, 'SpatialProps', {
-    enumerable: true,
-    get: function () {
-      return threeSpatialViewer.Props;
-    }
-  });
-  Object.defineProperty(exports, 'SpatialType', {
-    enumerable: true,
-    get: function () {
-      return threeSpatialViewer.SpatialType;
-    }
-  });
-  Object.defineProperty(exports, 'StereoMode', {
-    enumerable: true,
-    get: function () {
-      return threeSpatialViewer.StereoMode;
-    }
-  });
   exports.Gawd = Gawd;
   exports.GawdAsset = GawdAsset;
   exports.GawdQuilt = GawdQuilt;

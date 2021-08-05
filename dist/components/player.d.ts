@@ -1,4 +1,4 @@
-import { SpatialType, StereoMode, QuiltConfig, SpatialProps } from './spatial-viewer';
+import { SpatialProps } from './spatial-viewer';
 declare class Props {
     url: string;
     container: HTMLElement;
@@ -25,7 +25,7 @@ declare class Resolution {
     width: number;
     height: number;
 }
-export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution, SpatialProps, SpatialType, StereoMode, QuiltConfig };
+export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution };
 export default class Player {
     private props;
     private scene;

@@ -34,7 +34,7 @@ class Resolution {
   public height: number
 }
 
-export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution, SpatialProps, SpatialType, StereoMode, QuiltConfig }
+export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution }
 
 export default class Player {
 
@@ -139,6 +139,7 @@ export default class Player {
       video.autoplay = true
       video.loop = true
       video.playsInline = true
+      video.style.display = "none"
       document.body.appendChild(video);
       video.play();
       

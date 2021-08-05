@@ -3,9 +3,5 @@ export {
   PlayerProps,
   Gawd,
   GawdAsset,
-  GawdQuilt,
-  SpatialProps,
-  SpatialType,
-  StereoMode,
-  QuiltConfig
+  GawdQuilt
 } from "./components/player";

@@ -1,5 +1,4 @@
 import { SpatialType, StereoMode, QuiltConfig, Player as Player$1, Props as Props$1 } from 'three-spatial-viewer';
-export { QuiltConfig, Props as SpatialProps, SpatialType, StereoMode } from 'three-spatial-viewer';
 import { Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -373,6 +372,7 @@ class Player {
       video.autoplay = true;
       video.loop = true;
       video.playsInline = true;
+      video.style.display = "none";
       document.body.appendChild(video);
       video.play();
       var videoTex = new VideoTexture(video);
