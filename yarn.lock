@@ -1238,6 +1238,11 @@ define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
+detect-browser@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/detect-browser/-/detect-browser-5.2.0.tgz#c9cd5afa96a6a19fda0bbe9e9be48a6b6e1e9c97"
+  integrity sha512-tr7XntDAu50BVENgQfajMLzacmSe34D+qZc4zjnniz0ZVuw/TZcLcyxHQjYpJTM36sGEkZZlYLnIM1hH7alTMA==
+
 dir-glob@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/dir-glob/-/dir-glob-3.0.1.tgz#56dbf73d992a4a93ba1584f4534063fd2e41717f"
@@ -3374,7 +3379,7 @@ text-table@^0.2.0:
 
 "three-spatial-viewer@https://github.com/caseypugh/three-spatial-viewer":
   version "0.1.0"
-  resolved "https://github.com/caseypugh/three-spatial-viewer#6a4e56614c05444e45fbb1ce060956e77dc4718d"
+  resolved "https://github.com/caseypugh/three-spatial-viewer#8340ce94248442e76d59264d3d6eb351e62c27a5"
   dependencies:
     three "^0.129.0"
 

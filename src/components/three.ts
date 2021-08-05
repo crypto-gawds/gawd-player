@@ -4,5 +4,6 @@ export {
   Scene,
   ImageLoader,
   TextureLoader,
-  Texture
+  Texture,
+  VideoTexture
 } from 'three';

@@ -10,6 +10,7 @@ declare class GawdAsset {
     url: string;
     spatial: string;
     quilt: GawdQuilt;
+    quiltType: string;
     size: Resolution;
     viewSize: Resolution;
     contentType: string;

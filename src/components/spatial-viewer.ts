@@ -3,4 +3,5 @@ export {
   QuiltConfig,
   SpatialType,
   StereoMode,
+  Props as SpatialProps
 } from 'three-spatial-viewer';

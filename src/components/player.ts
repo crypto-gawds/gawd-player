@@ -1,11 +1,12 @@
 import * as http from 'http';
-import { SpatialType, StereoMode } from 'three-spatial-viewer';
-import { SpatialPlayer, QuiltConfig } from './spatial-viewer'
-import { WebGLRenderer, PerspectiveCamera, Scene, ImageLoader, TextureLoader, Texture } from './three'
+import { SpatialType, StereoMode, SpatialPlayer, QuiltConfig, SpatialProps } from './spatial-viewer'
+import { WebGLRenderer, PerspectiveCamera, Scene, TextureLoader, Texture, VideoTexture } from './three'
+import { detect } from 'detect-browser';
 
 class Props {
   public url: string
   public container: HTMLElement
+  public spatialProps: SpatialProps = new SpatialProps()
 }
 
 class Gawd {
@@ -43,7 +44,11 @@ export default class Player {
   private spatialPlayer: SpatialPlayer
   private camera: PerspectiveCamera
 
-  constructor(props?: object) {
+  constructor(props?: Props) {
+    // Defaults
+    this.props.spatialProps.spatialType = SpatialType.LOOKING_GLASS
+    this.props.spatialProps.stereoMode  = StereoMode.COLOR
+
     this.setProps(this.props, props)
 
     if (this.props.container) {
@@ -98,26 +103,47 @@ export default class Player {
       let totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
       let xpos = e.clientX / window.innerWidth
       // console.log(e.clientX, window.innerWidth, xpos, totalAngles)
-      this.spatialPlayer.quiltAngle = Math.round(xpos * totalAngles)
+      this.spatialPlayer.quiltAngle = Math.round(-xpos * totalAngles)
     }
   }
 
   private initGawd(gawd: Gawd): void {
-    console.log(`Loading ${gawd.name}...`)
-    let lkgAssets: GawdAsset[] = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare')
-    this.initMedia(lkgAssets[0])
+    const result = detect()
+    let lkgAsset: GawdAsset = null;
+
+    // if firefox+windows or mobile, default to PNG
+    if ((result.name == "firefox" && result.os.match(/windows/i)) || 
+         result.os.match(/iOS|android/i)) {
+      lkgAsset = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "image/png")[0]
+    }
+    else {
+      lkgAsset = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "video/mp4")[0]
+    }
+    
+    this.initMedia(lkgAsset)
   }
 
   private initMedia(asset: GawdAsset): void {
     if (asset.contentType == "image/png") {
-      console.log(`Loading image: ${asset.url}`)
+      // console.log(`Loading image: ${asset.url}`)
       const loader = new TextureLoader()
       loader.load(asset.url, function (tex) {
         this.loadSpatialPlayer(tex, asset)
       }.bind(this))
     }
     else if (asset.contentType == 'video/mp4') {
-      // TODO
+      let video = document.createElement('video') as HTMLVideoElement;
+      video.src = asset.url
+      video.crossOrigin = "anonymous"
+      video.muted = true
+      video.autoplay = true
+      video.loop = true
+      video.playsInline = true
+      document.body.appendChild(video);
+      video.play();
+      
+      const videoTex = new VideoTexture(video);
+      this.loadSpatialPlayer(videoTex, asset)
     }
   }
 
@@ -128,11 +154,9 @@ export default class Player {
     config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480
     config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640
 
-    this.spatialPlayer = new SpatialPlayer(texture, null, {
-      spatialType: SpatialType.LOOKING_GLASS,
-      stereoMode: StereoMode.COLOR,
-      quilt: config,
-    })
+    this.props.spatialProps.quilt = config
+
+    this.spatialPlayer = new SpatialPlayer(texture, null, this.props.spatialProps)
 
     this.scene.add(this.spatialPlayer)
 
@@ -141,7 +165,7 @@ export default class Player {
     this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
     this.camera.updateProjectionMatrix();
 
-    console.log(this.spatialPlayer)
+    // console.log(this.spatialPlayer)
   }
 
   private async loadGawdConfig(url: string): Promise<any> {
