@@ -34,7 +34,7 @@ class Resolution {
   public height: number
 }
 
-export { Props as PlayerProps, Gawd, GawdAsset }
+export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution, SpatialProps, SpatialType, StereoMode, QuiltConfig }
 
 export default class Player {
 

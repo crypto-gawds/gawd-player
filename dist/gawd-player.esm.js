@@ -1,4 +1,5 @@
 import { SpatialType, StereoMode, QuiltConfig, Player as Player$1, Props as Props$1 } from 'three-spatial-viewer';
+export { QuiltConfig, Props as SpatialProps, SpatialType, StereoMode } from 'three-spatial-viewer';
 import { Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -243,6 +244,35 @@ class Props {
   }
 
 }
+
+class Gawd {
+  constructor() {
+    this.name = void 0;
+    this.assets = void 0;
+  }
+
+}
+
+class GawdAsset {
+  constructor() {
+    this.url = void 0;
+    this.spatial = void 0;
+    this.quilt = void 0;
+    this.quiltType = void 0;
+    this.size = void 0;
+    this.viewSize = void 0;
+    this.contentType = void 0;
+  }
+
+}
+
+class GawdQuilt {
+  constructor() {
+    this.columns = void 0;
+    this.rows = void 0;
+  }
+
+}
 class Player {
   constructor(props) {
     var _this = this;
@@ -391,5 +421,5 @@ class Player {
 
 }
 
-export { Player, Props as PlayerProps };
+export { Gawd, GawdAsset, GawdQuilt, Player, Props as PlayerProps };
 //# sourceMappingURL=gawd-player.esm.js.map

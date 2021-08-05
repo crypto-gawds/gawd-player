@@ -242,6 +242,35 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
     }
 
   }
+
+  class Gawd {
+    constructor() {
+      this.name = void 0;
+      this.assets = void 0;
+    }
+
+  }
+
+  class GawdAsset {
+    constructor() {
+      this.url = void 0;
+      this.spatial = void 0;
+      this.quilt = void 0;
+      this.quiltType = void 0;
+      this.size = void 0;
+      this.viewSize = void 0;
+      this.contentType = void 0;
+    }
+
+  }
+
+  class GawdQuilt {
+    constructor() {
+      this.columns = void 0;
+      this.rows = void 0;
+    }
+
+  }
   class Player {
     constructor(props) {
       var _this = this;
@@ -390,6 +419,33 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
   }
 
+  Object.defineProperty(exports, 'QuiltConfig', {
+    enumerable: true,
+    get: function () {
+      return threeSpatialViewer.QuiltConfig;
+    }
+  });
+  Object.defineProperty(exports, 'SpatialProps', {
+    enumerable: true,
+    get: function () {
+      return threeSpatialViewer.Props;
+    }
+  });
+  Object.defineProperty(exports, 'SpatialType', {
+    enumerable: true,
+    get: function () {
+      return threeSpatialViewer.SpatialType;
+    }
+  });
+  Object.defineProperty(exports, 'StereoMode', {
+    enumerable: true,
+    get: function () {
+      return threeSpatialViewer.StereoMode;
+    }
+  });
+  exports.Gawd = Gawd;
+  exports.GawdAsset = GawdAsset;
+  exports.GawdQuilt = GawdQuilt;
   exports.Player = Player;
   exports.PlayerProps = Props;
 
