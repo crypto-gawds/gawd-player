@@ -1,10 +1,8 @@
 
 <div align="center">
-<h1>Crypto Gawd Player</h1>
+<h1>Gawd Player</h1>
 
-<img href="https://juniorxsound.github.io/THREE.SixDOF/examples/image.html" src="./docs/preview.png" height="200" /><br/>
-
-<p>A JS component for displaying Crypto Gawds in their various formats, powered by <a href="https://github.com/caseypugh/three-spatial-viewer/">three-spatial-viewer</a>.
+<p>A JS component for displaying GAWDS in their various formats, powered by <a href="https://github.com/caseypugh/three-spatial-viewer/">three-spatial-viewer</a>.
 </p>
 <div style="clear:both;"></div>
 <!-- <img src="https://github.com//workflows/CI/badge.svg" /><br/> -->
