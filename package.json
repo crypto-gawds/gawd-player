@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "gawd-player",
   "description": "A plugin for viewing Crypto Gawds in their various formats",
   "main": "dist/gawd-player.js",

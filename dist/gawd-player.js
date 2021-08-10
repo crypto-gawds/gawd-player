@@ -472,7 +472,7 @@
 
     onMouseMove(e) {
       if (this.spatialPlayer) {
-        this.targetAngle = (1 - e.clientX / window.innerWidth) * this.totalAngles;
+        this.targetAngle = (1 - e.clientX / window.innerWidth) * (this.totalAngles - 1);
         this.startAngle = this.spatialPlayer.quiltAngle;
         this.aniCurTime = 0;
       }
