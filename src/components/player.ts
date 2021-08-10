@@ -1,11 +1,13 @@
-import * as http from 'http';
 import { SpatialType, StereoMode, SpatialPlayer, QuiltConfig, SpatialProps } from './spatial-viewer'
 import { WebGLRenderer, PerspectiveCamera, Scene, TextureLoader, Texture, VideoTexture } from './three'
 import { detect } from 'detect-browser';
+import { Clock } from 'three';
 
 class Props {
   public url: string
   public container: HTMLElement
+  public enableVideo: Boolean = true
+  public enableMouseMove: Boolean = true
   public spatialProps: SpatialProps = new SpatialProps()
 }
 
@@ -43,13 +45,23 @@ export default class Player {
   private renderer: WebGLRenderer
   private spatialPlayer: SpatialPlayer
   private camera: PerspectiveCamera
+  private clock: Clock
+
+  // Animation
+  private startAngle: number = 0
+  private targetAngle: number = 0
+  private totalAngles: number = 0
+  private aniCurTime: number = 0
+  private aniDuration: number = 0.5
 
   constructor(props?: Props) {
     // Defaults
     this.props.spatialProps.spatialType = SpatialType.LOOKING_GLASS
-    this.props.spatialProps.stereoMode  = StereoMode.COLOR
+    this.props.spatialProps.stereoMode  = StereoMode.OFF
 
     this.setProps(this.props, props)
+
+    this.clock = new Clock();
 
     if (this.props.container) {
       this.initThree()
@@ -66,6 +78,20 @@ export default class Player {
     }
   }
 
+  private setProps(viewerProps: Props, userProps?: object): void {
+    if (!userProps) return
+
+    for (let prop in userProps) {
+      if (prop in viewerProps) {
+        viewerProps[prop] = userProps[prop]
+      } else {
+        console.warn(
+          `GawdViewer: Provided ${prop} in config but it is not a valid property and will be ignored`,
+        )
+      }
+    }
+  }
+  
   private initThree(): void {
     this.scene = new Scene();
 
@@ -91,19 +117,8 @@ export default class Player {
       this.renderer.setSize(this.props.container.clientWidth, this.props.container.clientHeight)
     })
 
-    window.addEventListener('mousemove', this.onMouseMove.bind(this))
-  }
-
-  private render(): void {
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  private onMouseMove(e: MouseEvent): void {
-    if (this.spatialPlayer) {
-      let totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
-      let xpos = e.clientX / window.innerWidth
-      // console.log(e.clientX, window.innerWidth, xpos, totalAngles)
-      this.spatialPlayer.quiltAngle = Math.round(-xpos * totalAngles)
+    if (this.props.enableMouseMove) {
+      window.addEventListener('mousemove', this.onMouseMove.bind(this))
     }
   }
 
@@ -112,8 +127,10 @@ export default class Player {
     let lkgAsset: GawdAsset = null;
 
     // if firefox+windows or mobile, default to PNG
-    if ((result.name == "firefox" && result.os.match(/windows/i)) || 
-         result.os.match(/iOS|android/i)) {
+    // DEFAULT TO PNG FOR NOW
+    if (true || (result.name == "firefox" && result.os.match(/windows/i)) || 
+         result.os.match(/iOS|android/i) ||
+         !this.props.enableVideo) {
       lkgAsset = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "image/png")[0]
     }
     else {
@@ -158,15 +175,14 @@ export default class Player {
     this.props.spatialProps.quilt = config
 
     this.spatialPlayer = new SpatialPlayer(texture, null, this.props.spatialProps)
+    this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
 
     this.scene.add(this.spatialPlayer)
 
-    let dist = this.camera.position.z - this.spatialPlayer.position.z;
+    let dist = this.camera.position.z - this.spatialPlayer.position.z
     let height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
-    this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
+    this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
     this.camera.updateProjectionMatrix();
-
-    // console.log(this.spatialPlayer)
   }
 
   private async loadGawdConfig(url: string): Promise<any> {
@@ -174,21 +190,64 @@ export default class Player {
     return await response.json()
   }
 
-  private setProps(viewerProps: Props, userProps?: object): void {
-    if (!userProps) return
-
-    for (let prop in userProps) {
-      if (prop in viewerProps) {
-        viewerProps[prop] = userProps[prop]
-      } else {
-        console.warn(
-          `GawdViewer: Provided ${prop} in config but it is not a valid property and will be ignored`,
-        )
-      }
+  private onMouseMove(e: MouseEvent): void {
+    if (this.spatialPlayer) {
+      this.targetAngle = (1 - (e.clientX / window.innerWidth)) * this.totalAngles
+      this.startAngle = this.spatialPlayer.quiltAngle
+      this.aniCurTime = 0
     }
+  }
+  
+  private render(): void {
+    this.aniCurTime += this.clock.getDelta()
+
+    if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
+      this.spatialPlayer.quiltAngle = Math.round(this.lerp(
+        this.startAngle, 
+        this.targetAngle,
+        this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)
+      ))
+    }
+    
+    this.renderer.render(this.scene, this.camera)
+  }
+
+  private lerp(value1: number, value2: number, amount: number) {
+    amount = amount < 0 ? 0 : amount;
+    amount = amount > 1 ? 1 : amount;
+    return value1 + (value2 - value1) * amount;
   }
 
   public get aspectRatio(): number {
     return this.props.container.clientWidth / this.props.container.clientHeight
+  }
+
+  EasingFunctions = {
+    // no easing, no acceleration
+    linear: t => t,
+    // accelerating from zero velocity
+    easeInQuad: t => t*t,
+    // decelerating to zero velocity
+    easeOutQuad: t => t*(2-t),
+    // acceleration until halfway, then deceleration
+    easeInOutQuad: t => t<.5 ? 2*t*t : -1+(4-2*t)*t,
+    // accelerating from zero velocity 
+    easeInCubic: t => t*t*t,
+    // decelerating to zero velocity 
+    easeOutCubic: t => (--t)*t*t+1,
+    // acceleration until halfway, then deceleration 
+    easeInOutCubic: t => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1,
+    // accelerating from zero velocity 
+    easeInQuart: t => t*t*t*t,
+    // decelerating to zero velocity 
+    easeOutQuart: t => 1-(--t)*t*t*t,
+    // acceleration until halfway, then deceleration
+    easeInOutQuart: t => t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t,
+    // accelerating from zero velocity
+    easeInQuint: t => t*t*t*t*t,
+    // decelerating to zero velocity
+    easeOutQuint: t => 1+(--t)*t*t*t*t,
+    // acceleration until halfway, then deceleration 
+    easeInOutQuint: t => t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t
   }
 }

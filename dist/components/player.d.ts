@@ -2,6 +2,8 @@ import { SpatialProps } from './spatial-viewer';
 declare class Props {
     url: string;
     container: HTMLElement;
+    enableVideo: Boolean;
+    enableMouseMove: Boolean;
     spatialProps: SpatialProps;
 }
 declare class Gawd {
@@ -32,14 +34,36 @@ export default class Player {
     private renderer;
     private spatialPlayer;
     private camera;
+    private clock;
+    private startAngle;
+    private targetAngle;
+    private totalAngles;
+    private aniCurTime;
+    private aniDuration;
     constructor(props?: Props);
+    private setProps;
     private initThree;
-    private render;
-    private onMouseMove;
     private initGawd;
     private initMedia;
     private loadSpatialPlayer;
     private loadGawdConfig;
-    private setProps;
+    private onMouseMove;
+    private render;
+    private lerp;
     get aspectRatio(): number;
+    EasingFunctions: {
+        linear: (t: any) => any;
+        easeInQuad: (t: any) => number;
+        easeOutQuad: (t: any) => number;
+        easeInOutQuad: (t: any) => number;
+        easeInCubic: (t: any) => number;
+        easeOutCubic: (t: any) => number;
+        easeInOutCubic: (t: any) => number;
+        easeInQuart: (t: any) => number;
+        easeOutQuart: (t: any) => number;
+        easeInOutQuart: (t: any) => number;
+        easeInQuint: (t: any) => number;
+        easeOutQuint: (t: any) => number;
+        easeInOutQuint: (t: any) => number;
+    };
 }

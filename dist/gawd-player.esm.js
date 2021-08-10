@@ -1,5 +1,5 @@
 import { SpatialType, StereoMode, QuiltConfig, Player as Player$1, Props as Props$1 } from 'three-spatial-viewer';
-import { Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
+import { Clock, Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -239,6 +239,8 @@ class Props {
   constructor() {
     this.url = void 0;
     this.container = void 0;
+    this.enableVideo = true;
+    this.enableMouseMove = true;
     this.spatialProps = new Props$1();
   }
 
@@ -273,6 +275,7 @@ class GawdQuilt {
 
 }
 class Player {
+  // Animation
   constructor(props) {
     var _this = this;
 
@@ -281,10 +284,71 @@ class Player {
     this.renderer = void 0;
     this.spatialPlayer = void 0;
     this.camera = void 0;
+    this.clock = void 0;
+    this.startAngle = 0;
+    this.targetAngle = 0;
+    this.totalAngles = 0;
+    this.aniCurTime = 0;
+    this.aniDuration = 0.5;
+    this.EasingFunctions = {
+      // no easing, no acceleration
+      linear: function linear(t) {
+        return t;
+      },
+      // accelerating from zero velocity
+      easeInQuad: function easeInQuad(t) {
+        return t * t;
+      },
+      // decelerating to zero velocity
+      easeOutQuad: function easeOutQuad(t) {
+        return t * (2 - t);
+      },
+      // acceleration until halfway, then deceleration
+      easeInOutQuad: function easeInOutQuad(t) {
+        return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      },
+      // accelerating from zero velocity 
+      easeInCubic: function easeInCubic(t) {
+        return t * t * t;
+      },
+      // decelerating to zero velocity 
+      easeOutCubic: function easeOutCubic(t) {
+        return --t * t * t + 1;
+      },
+      // acceleration until halfway, then deceleration 
+      easeInOutCubic: function easeInOutCubic(t) {
+        return t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+      },
+      // accelerating from zero velocity 
+      easeInQuart: function easeInQuart(t) {
+        return t * t * t * t;
+      },
+      // decelerating to zero velocity 
+      easeOutQuart: function easeOutQuart(t) {
+        return 1 - --t * t * t * t;
+      },
+      // acceleration until halfway, then deceleration
+      easeInOutQuart: function easeInOutQuart(t) {
+        return t < .5 ? 8 * t * t * t * t : 1 - 8 * --t * t * t * t;
+      },
+      // accelerating from zero velocity
+      easeInQuint: function easeInQuint(t) {
+        return t * t * t * t * t;
+      },
+      // decelerating to zero velocity
+      easeOutQuint: function easeOutQuint(t) {
+        return 1 + --t * t * t * t * t;
+      },
+      // acceleration until halfway, then deceleration 
+      easeInOutQuint: function easeInOutQuint(t) {
+        return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * --t * t * t * t * t;
+      }
+    };
     // Defaults
     this.props.spatialProps.spatialType = SpatialType.LOOKING_GLASS;
-    this.props.spatialProps.stereoMode = StereoMode.COLOR;
+    this.props.spatialProps.stereoMode = StereoMode.OFF;
     this.setProps(this.props, props);
+    this.clock = new Clock();
 
     if (this.props.container) {
       this.initThree();
@@ -297,6 +361,18 @@ class Player {
       this.loadGawdConfig(this.props.url).then(function (data) {
         _this.initGawd(data);
       });
+    }
+  }
+
+  setProps(viewerProps, userProps) {
+    if (!userProps) return;
+
+    for (var prop in userProps) {
+      if (prop in viewerProps) {
+        viewerProps[prop] = userProps[prop];
+      } else {
+        console.warn("GawdViewer: Provided ".concat(prop, " in config but it is not a valid property and will be ignored"));
+      }
     }
   }
 
@@ -324,33 +400,20 @@ class Player {
 
       _this2.renderer.setSize(_this2.props.container.clientWidth, _this2.props.container.clientHeight);
     });
-    window.addEventListener('mousemove', this.onMouseMove.bind(this));
-  }
 
-  render() {
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  onMouseMove(e) {
-    if (this.spatialPlayer) {
-      var totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
-      var xpos = e.clientX / window.innerWidth; // console.log(e.clientX, window.innerWidth, xpos, totalAngles)
-
-      this.spatialPlayer.quiltAngle = Math.round(-xpos * totalAngles);
+    if (this.props.enableMouseMove) {
+      window.addEventListener('mousemove', this.onMouseMove.bind(this));
     }
   }
 
   initGawd(gawd) {
     var result = detect();
     var lkgAsset = null; // if firefox+windows or mobile, default to PNG
+    // DEFAULT TO PNG FOR NOW
 
-    if (result.name == "firefox" && result.os.match(/windows/i) || result.os.match(/iOS|android/i)) {
+    {
       lkgAsset = gawd.assets.filter(function (a) {
         return a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "image/png";
-      })[0];
-    } else {
-      lkgAsset = gawd.assets.filter(function (a) {
-        return a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "video/mp4";
       })[0];
     }
 
@@ -388,12 +451,13 @@ class Player {
     config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640;
     this.props.spatialProps.quilt = config;
     this.spatialPlayer = new Player$1(texture, null, this.props.spatialProps);
+    this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
     this.scene.add(this.spatialPlayer);
     var dist = this.camera.position.z - this.spatialPlayer.position.z;
     var height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
 
     this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
-    this.camera.updateProjectionMatrix(); // console.log(this.spatialPlayer)
+    this.camera.updateProjectionMatrix();
   }
 
   loadGawdConfig(url) {
@@ -403,16 +467,28 @@ class Player {
     })();
   }
 
-  setProps(viewerProps, userProps) {
-    if (!userProps) return;
-
-    for (var prop in userProps) {
-      if (prop in viewerProps) {
-        viewerProps[prop] = userProps[prop];
-      } else {
-        console.warn("GawdViewer: Provided ".concat(prop, " in config but it is not a valid property and will be ignored"));
-      }
+  onMouseMove(e) {
+    if (this.spatialPlayer) {
+      this.targetAngle = (1 - e.clientX / window.innerWidth) * this.totalAngles;
+      this.startAngle = this.spatialPlayer.quiltAngle;
+      this.aniCurTime = 0;
     }
+  }
+
+  render() {
+    this.aniCurTime += this.clock.getDelta();
+
+    if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
+      this.spatialPlayer.quiltAngle = Math.round(this.lerp(this.startAngle, this.targetAngle, this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)));
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  lerp(value1, value2, amount) {
+    amount = amount < 0 ? 0 : amount;
+    amount = amount > 1 ? 1 : amount;
+    return value1 + (value2 - value1) * amount;
   }
 
   get aspectRatio() {
