@@ -6,13 +6,15 @@ import { Clock } from 'three';
 class Props {
   public url: string
   public container: HTMLElement
-  public enableVideo: Boolean = true
   public enableMouseMove: Boolean = true
+  public defaultAsset: GawdAsset = new GawdAsset()
+  public defaultMobileAsset: GawdAsset = new GawdAsset()
   public spatialProps: SpatialProps = new SpatialProps()
 }
 
 class Gawd {
   public name: string
+  public hash: string
   public assets: Array<GawdAsset>
 }
 
@@ -46,6 +48,7 @@ export default class Player {
   private spatialPlayer: SpatialPlayer
   private camera: PerspectiveCamera
   private clock: Clock
+  private gawd: Gawd
 
   // Animation
   private startAngle: number = 0
@@ -58,6 +61,19 @@ export default class Player {
     // Defaults
     this.props.spatialProps.spatialType = SpatialType.LOOKING_GLASS
     this.props.spatialProps.stereoMode  = StereoMode.OFF
+
+    // Default desktop asset
+    this.props.defaultAsset.spatial = 'lookingglass'
+    this.props.defaultAsset.quiltType = 'FourKSquare'
+    this.props.defaultAsset.size = new Resolution()
+    this.props.defaultAsset.size.width = 4320
+    this.props.defaultAsset.contentType = 'image/png'
+
+    // Default mobile asset
+    this.props.defaultMobileAsset.spatial = '2d'
+    this.props.defaultMobileAsset.size = new Resolution()
+    this.props.defaultMobileAsset.size.width = 1080
+    this.props.defaultMobileAsset.contentType = 'video/mp4'
 
     this.setProps(this.props, props)
 
@@ -116,50 +132,68 @@ export default class Player {
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(this.props.container.clientWidth, this.props.container.clientHeight)
     })
-
-    if (this.props.enableMouseMove) {
-      window.addEventListener('mousemove', this.onMouseMove.bind(this))
-    }
   }
 
   private initGawd(gawd: Gawd): void {
+    this.gawd = gawd
+
     const result = detect()
     let lkgAsset: GawdAsset = null;
 
-    // if firefox+windows or mobile, default to PNG
-    // DEFAULT TO PNG FOR NOW
-    if (true || (result.name == "firefox" && result.os.match(/windows/i)) || 
-         result.os.match(/iOS|android/i) ||
-         !this.props.enableVideo) {
-      lkgAsset = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "image/png")[0]
-    }
-    else {
-      lkgAsset = gawd.assets.filter(a => a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "video/mp4")[0]
+    if (result.os.match(/iOS|android/i)) {
+      // Default mobile asset 
+      lkgAsset = gawd.assets.filter(a => 
+        a.spatial == this.props.defaultMobileAsset.spatial && 
+        a.size.width == this.props.defaultMobileAsset.size.width && 
+        (a.quiltType == this.props.defaultMobileAsset.quiltType || !this.props.defaultMobileAsset.quiltType)  && 
+        a.contentType == this.props.defaultMobileAsset.contentType)[0]
+      
+      if (lkgAsset) {
+        this.initMedia(lkgAsset)
+        return
+      }
     }
     
+    // Default desktop asset 
+    lkgAsset = gawd.assets.filter(a => 
+      a.spatial == this.props.defaultAsset.spatial && 
+      a.size.width == this.props.defaultAsset.size.width && 
+      (a.quiltType == this.props.defaultAsset.quiltType || !this.props.defaultAsset.quiltType)  && 
+      a.contentType == this.props.defaultAsset.contentType )[0]
     this.initMedia(lkgAsset)
   }
 
   private initMedia(asset: GawdAsset): void {
+    if (!asset) {
+      console.warn("No GawdAsset found!");
+      return
+    }
+
     if (asset.contentType == "image/png") {
-      // console.log(`Loading image: ${asset.url}`)
       const loader = new TextureLoader()
       loader.load(asset.url, function (tex) {
         this.loadSpatialPlayer(tex, asset)
       }.bind(this))
     }
     else if (asset.contentType == 'video/mp4') {
-      let video = document.createElement('video') as HTMLVideoElement;
-      video.src = asset.url
-      video.crossOrigin = "anonymous"
-      video.muted = true
-      video.autoplay = true
-      video.loop = true
-      video.playsInline = true
-      video.style.display = "none"
-      document.body.appendChild(video);
-      video.play();
-      
+      const videoId = "gawd-video-" + this.gawd.hash
+      let video = document.getElementById(videoId) as HTMLVideoElement
+
+      if (!video)
+      {
+        video = document.createElement('video') as HTMLVideoElement
+        video.id = videoId
+        video.src = asset.url
+        video.crossOrigin = "anonymous"
+        video.muted = true
+        video.autoplay = true
+        video.loop = true
+        video.playsInline = true
+        video.style.display = "none"
+        document.body.appendChild(video);
+        video.play();
+      }
+        
       const videoTex = new VideoTexture(video);
       this.loadSpatialPlayer(videoTex, asset)
     }
@@ -167,10 +201,23 @@ export default class Player {
 
   private loadSpatialPlayer(texture: Texture, asset: GawdAsset): void {
     let config = new QuiltConfig();
-    config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8
-    config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6
-    config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480
-    config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640
+
+    if (asset.quilt)
+    {
+      config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8
+      config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6
+      config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480
+      config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640
+    }
+    else
+    {
+      // disable quilt 
+      config.columns = 1
+      config.rows = 1
+      config.width = asset.size.width
+      config.height = asset.size.height
+      this.props.enableMouseMove = false
+    }
 
     this.props.spatialProps.quilt = config
 
@@ -183,6 +230,10 @@ export default class Player {
     let height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
     this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
     this.camera.updateProjectionMatrix();
+
+    if (this.props.enableMouseMove) {
+      window.addEventListener('mousemove', this.onMouseMove.bind(this))
+    }
   }
 
   private async loadGawdConfig(url: string): Promise<any> {
@@ -199,14 +250,17 @@ export default class Player {
   }
   
   private render(): void {
-    this.aniCurTime += this.clock.getDelta()
+    if (this.props.enableMouseMove)
+    {
+      this.aniCurTime += this.clock.getDelta()
 
-    if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
-      this.spatialPlayer.quiltAngle = Math.round(this.lerp(
-        this.startAngle, 
-        this.targetAngle,
-        this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)
-      ))
+      if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
+        this.spatialPlayer.quiltAngle = Math.round(this.lerp(
+          this.startAngle, 
+          this.targetAngle,
+          this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)
+        ))
+      }
     }
     
     this.renderer.render(this.scene, this.camera)
