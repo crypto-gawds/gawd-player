@@ -2,12 +2,14 @@ import { SpatialProps } from './spatial-viewer';
 declare class Props {
     url: string;
     container: HTMLElement;
-    enableVideo: Boolean;
     enableMouseMove: Boolean;
+    defaultAsset: GawdAsset;
+    defaultMobileAsset: GawdAsset;
     spatialProps: SpatialProps;
 }
 declare class Gawd {
     name: string;
+    hash: string;
     assets: Array<GawdAsset>;
 }
 declare class GawdAsset {
@@ -35,6 +37,7 @@ export default class Player {
     private spatialPlayer;
     private camera;
     private clock;
+    private gawd;
     private startAngle;
     private targetAngle;
     private totalAngles;

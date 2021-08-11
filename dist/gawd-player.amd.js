@@ -238,8 +238,9 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
     constructor() {
       this.url = void 0;
       this.container = void 0;
-      this.enableVideo = true;
       this.enableMouseMove = true;
+      this.defaultAsset = new GawdAsset();
+      this.defaultMobileAsset = new GawdAsset();
       this.spatialProps = new threeSpatialViewer.Props();
     }
 
@@ -248,6 +249,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
   class Gawd {
     constructor() {
       this.name = void 0;
+      this.hash = void 0;
       this.assets = void 0;
     }
 
@@ -273,6 +275,14 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
     }
 
   }
+
+  class Resolution {
+    constructor() {
+      this.width = void 0;
+      this.height = void 0;
+    }
+
+  }
   class Player {
     // Animation
     constructor(props) {
@@ -284,6 +294,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
       this.spatialPlayer = void 0;
       this.camera = void 0;
       this.clock = void 0;
+      this.gawd = void 0;
       this.startAngle = 0;
       this.targetAngle = 0;
       this.totalAngles = 0;
@@ -345,7 +356,18 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
       };
       // Defaults
       this.props.spatialProps.spatialType = threeSpatialViewer.SpatialType.LOOKING_GLASS;
-      this.props.spatialProps.stereoMode = threeSpatialViewer.StereoMode.OFF;
+      this.props.spatialProps.stereoMode = threeSpatialViewer.StereoMode.OFF; // Default desktop asset
+
+      this.props.defaultAsset.spatial = 'lookingglass';
+      this.props.defaultAsset.quiltType = 'FourKSquare';
+      this.props.defaultAsset.size = new Resolution();
+      this.props.defaultAsset.size.width = 4320;
+      this.props.defaultAsset.contentType = 'image/png'; // Default mobile asset
+
+      this.props.defaultMobileAsset.spatial = '2d';
+      this.props.defaultMobileAsset.size = new Resolution();
+      this.props.defaultMobileAsset.size.width = 1080;
+      this.props.defaultMobileAsset.contentType = 'video/mp4';
       this.setProps(this.props, props);
       this.clock = new three.Clock();
 
@@ -399,44 +421,63 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
         _this2.renderer.setSize(_this2.props.container.clientWidth, _this2.props.container.clientHeight);
       });
-
-      if (this.props.enableMouseMove) {
-        window.addEventListener('mousemove', this.onMouseMove.bind(this));
-      }
     }
 
     initGawd(gawd) {
+      var _this3 = this;
+
+      this.gawd = gawd;
       var result = detect();
-      var lkgAsset = null; // if firefox+windows or mobile, default to PNG
-      // DEFAULT TO PNG FOR NOW
+      var lkgAsset = null;
 
-      {
+      if (result.os.match(/iOS|android/i)) {
+        // Default mobile asset 
         lkgAsset = gawd.assets.filter(function (a) {
-          return a.spatial == 'lookingglass' && a.quiltType == 'FourKSquare' && a.contentType == "image/png";
+          return a.spatial == _this3.props.defaultMobileAsset.spatial && a.size.width == _this3.props.defaultMobileAsset.size.width && (a.quiltType == _this3.props.defaultMobileAsset.quiltType || !_this3.props.defaultMobileAsset.quiltType) && a.contentType == _this3.props.defaultMobileAsset.contentType;
         })[0];
-      }
 
+        if (lkgAsset) {
+          this.initMedia(lkgAsset);
+          return;
+        }
+      } // Default desktop asset 
+
+
+      lkgAsset = gawd.assets.filter(function (a) {
+        return a.spatial == _this3.props.defaultAsset.spatial && a.size.width == _this3.props.defaultAsset.size.width && (a.quiltType == _this3.props.defaultAsset.quiltType || !_this3.props.defaultAsset.quiltType) && a.contentType == _this3.props.defaultAsset.contentType;
+      })[0];
       this.initMedia(lkgAsset);
     }
 
     initMedia(asset) {
+      if (!asset) {
+        console.warn("No GawdAsset found!");
+        return;
+      }
+
       if (asset.contentType == "image/png") {
-        // console.log(`Loading image: ${asset.url}`)
         var loader = new three.TextureLoader();
         loader.load(asset.url, function (tex) {
           this.loadSpatialPlayer(tex, asset);
         }.bind(this));
       } else if (asset.contentType == 'video/mp4') {
-        var video = document.createElement('video');
-        video.src = asset.url;
-        video.crossOrigin = "anonymous";
-        video.muted = true;
-        video.autoplay = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.style.display = "none";
-        document.body.appendChild(video);
-        video.play();
+        var videoId = "gawd-video-" + this.gawd.hash;
+        var video = document.getElementById(videoId);
+
+        if (!video) {
+          video = document.createElement('video');
+          video.id = videoId;
+          video.src = asset.url;
+          video.crossOrigin = "anonymous";
+          video.muted = true;
+          video.autoplay = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.style.display = "none";
+          document.body.appendChild(video);
+          video.play();
+        }
+
         var videoTex = new three.VideoTexture(video);
         this.loadSpatialPlayer(videoTex, asset);
       }
@@ -444,10 +485,21 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
     loadSpatialPlayer(texture, asset) {
       var config = new threeSpatialViewer.QuiltConfig();
-      config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8;
-      config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6;
-      config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480;
-      config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640;
+
+      if (asset.quilt) {
+        config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8;
+        config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6;
+        config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480;
+        config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640;
+      } else {
+        // disable quilt 
+        config.columns = 1;
+        config.rows = 1;
+        config.width = asset.size.width;
+        config.height = asset.size.height;
+        this.props.enableMouseMove = false;
+      }
+
       this.props.spatialProps.quilt = config;
       this.spatialPlayer = new threeSpatialViewer.Player(texture, null, this.props.spatialProps);
       this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
@@ -457,6 +509,10 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
       this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
       this.camera.updateProjectionMatrix();
+
+      if (this.props.enableMouseMove) {
+        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+      }
     }
 
     loadGawdConfig(url) {
@@ -475,10 +531,12 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
     }
 
     render() {
-      this.aniCurTime += this.clock.getDelta();
+      if (this.props.enableMouseMove) {
+        this.aniCurTime += this.clock.getDelta();
 
-      if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
-        this.spatialPlayer.quiltAngle = Math.round(this.lerp(this.startAngle, this.targetAngle, this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)));
+        if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
+          this.spatialPlayer.quiltAngle = Math.round(this.lerp(this.startAngle, this.targetAngle, this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)));
+        }
       }
 
       this.renderer.render(this.scene, this.camera);
