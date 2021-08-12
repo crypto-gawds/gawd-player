@@ -440,7 +440,7 @@ class Player {
     var result = detect();
     var lkgAsset = null;
 
-    if (result.os.match(/iOS|android/i) || true) {
+    if (result.os.match(/iOS|android/i)) {
       // Default mobile asset 
       lkgAsset = gawd.assets.filter(function (a) {
         return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
