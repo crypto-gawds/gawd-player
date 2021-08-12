@@ -3271,7 +3271,7 @@ text-table@^0.2.0:
 
 "three-spatial-viewer@https://github.com/caseypugh/three-spatial-viewer":
   version "0.1.0"
-  resolved "https://github.com/caseypugh/three-spatial-viewer#8340ce94248442e76d59264d3d6eb351e62c27a5"
+  resolved "https://github.com/caseypugh/three-spatial-viewer#bd3891aabb58f3f7f3ba9baa802d8cb1379476ef"
   dependencies:
     three "^0.129.0"
 
