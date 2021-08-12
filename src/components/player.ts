@@ -155,7 +155,7 @@ export default class Player {
     const result = detect()
     let lkgAsset: GawdAsset = null;
 
-    if (result.os.match(/iOS|android/i) || true) {
+    if (result.os.match(/iOS|android/i)) {
       // Default mobile asset 
       lkgAsset = gawd.assets.filter(a => 
         a.spatial == this._props.defaultMobileAsset.spatial && 
