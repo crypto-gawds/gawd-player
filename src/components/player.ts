@@ -2,6 +2,7 @@ import { SpatialType, StereoMode, SpatialPlayer, QuiltConfig, SpatialProps } fro
 import { WebGLRenderer, PerspectiveCamera, Scene, TextureLoader, Texture, VideoTexture } from './three'
 import { detect } from 'detect-browser';
 import { Clock } from 'three';
+import { PlayerProps } from '..';
 
 class Props {
   public url: string
@@ -42,7 +43,7 @@ export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution }
 
 export default class Player {
 
-  private props: Props = new Props()
+  private _props: Props = new Props()
   private scene: Scene
   private renderer: WebGLRenderer
   private spatialPlayer: SpatialPlayer
@@ -59,27 +60,27 @@ export default class Player {
 
   constructor(props?: Props) {
     // Defaults
-    this.props.spatialProps.spatialType = SpatialType.LOOKING_GLASS
-    this.props.spatialProps.stereoMode  = StereoMode.OFF
+    this._props.spatialProps.spatialType = SpatialType.LOOKING_GLASS
+    this._props.spatialProps.stereoMode  = StereoMode.OFF
 
     // Default desktop asset
-    this.props.defaultAsset.spatial = 'lookingglass'
-    this.props.defaultAsset.quiltType = 'FourKSquare'
-    this.props.defaultAsset.size = new Resolution()
-    this.props.defaultAsset.size.width = 4320
-    this.props.defaultAsset.contentType = 'image/png'
+    this._props.defaultAsset.spatial = 'lookingglass'
+    this._props.defaultAsset.quiltType = 'FourKSquare'
+    this._props.defaultAsset.size = new Resolution()
+    this._props.defaultAsset.size.width = 4320
+    this._props.defaultAsset.contentType = 'image/png'
 
     // Default mobile asset
-    this.props.defaultMobileAsset.spatial = '2d'
-    this.props.defaultMobileAsset.size = new Resolution()
-    this.props.defaultMobileAsset.size.width = 1080
-    this.props.defaultMobileAsset.contentType = 'video/mp4'
+    this._props.defaultMobileAsset.spatial = '2d'
+    this._props.defaultMobileAsset.size = new Resolution()
+    this._props.defaultMobileAsset.size.width = 1080
+    this._props.defaultMobileAsset.contentType = 'video/mp4'
 
-    this.setProps(this.props, props)
+    this.setProps(this._props, props)
 
     this.clock = new Clock();
 
-    if (this.props.container) {
+    if (this._props.container) {
       this.initThree()
     }
     else {
@@ -87,19 +88,19 @@ export default class Player {
       return;
     }
 
-    if (this.props.url) {
-      this.loadGawdConfig(this.props.url).then(data => {
+    if (this._props.url) {
+      this.loadGawdConfig(this._props.url).then(data => {
         this.initGawd(data)
       });
     }
   }
 
-  private setProps(viewerProps: Props, userProps?: object): void {
+  private setProps(playerProps: Props, userProps?: object): void {
     if (!userProps) return
 
     for (let prop in userProps) {
-      if (prop in viewerProps) {
-        viewerProps[prop] = userProps[prop]
+      if (prop in playerProps) {
+        playerProps[prop] = userProps[prop]
       } else {
         console.warn(
           `GawdViewer: Provided ${prop} in config but it is not a valid property and will be ignored`,
@@ -112,9 +113,9 @@ export default class Player {
     this.scene = new Scene();
 
     this.renderer = new WebGLRenderer({ antialias: true });
-    this.renderer.setSize(this.props.container.clientWidth, this.props.container.clientHeight);
+    this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
     this.renderer.xr.enabled = false;
-    this.props.container.appendChild(this.renderer.domElement);
+    this._props.container.appendChild(this.renderer.domElement);
 
     this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
     this.camera.position
@@ -130,7 +131,7 @@ export default class Player {
     window.addEventListener('resize', ev => {
       this.camera.aspect = this.aspectRatio
       this.camera.updateProjectionMatrix()
-      this.renderer.setSize(this.props.container.clientWidth, this.props.container.clientHeight)
+      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
     })
   }
 
@@ -143,10 +144,10 @@ export default class Player {
     if (result.os.match(/iOS|android/i)) {
       // Default mobile asset 
       lkgAsset = gawd.assets.filter(a => 
-        a.spatial == this.props.defaultMobileAsset.spatial && 
-        a.size.width == this.props.defaultMobileAsset.size.width && 
-        (a.quiltType == this.props.defaultMobileAsset.quiltType || !this.props.defaultMobileAsset.quiltType)  && 
-        a.contentType == this.props.defaultMobileAsset.contentType)[0]
+        a.spatial == this._props.defaultMobileAsset.spatial && 
+        a.size.width == this._props.defaultMobileAsset.size.width && 
+        (a.quiltType == this._props.defaultMobileAsset.quiltType || !this._props.defaultMobileAsset.quiltType)  && 
+        a.contentType == this._props.defaultMobileAsset.contentType)[0]
       
       if (lkgAsset) {
         this.initMedia(lkgAsset)
@@ -156,10 +157,10 @@ export default class Player {
     
     // Default desktop asset 
     lkgAsset = gawd.assets.filter(a => 
-      a.spatial == this.props.defaultAsset.spatial && 
-      a.size.width == this.props.defaultAsset.size.width && 
-      (a.quiltType == this.props.defaultAsset.quiltType || !this.props.defaultAsset.quiltType)  && 
-      a.contentType == this.props.defaultAsset.contentType )[0]
+      a.spatial == this._props.defaultAsset.spatial && 
+      a.size.width == this._props.defaultAsset.size.width && 
+      (a.quiltType == this._props.defaultAsset.quiltType || !this._props.defaultAsset.quiltType)  && 
+      a.contentType == this._props.defaultAsset.contentType )[0]
     this.initMedia(lkgAsset)
   }
 
@@ -216,12 +217,12 @@ export default class Player {
       config.rows = 1
       config.width = asset.size.width
       config.height = asset.size.height
-      this.props.enableMouseMove = false
+      this._props.enableMouseMove = false
     }
 
-    this.props.spatialProps.quilt = config
+    this._props.spatialProps.quilt = config
 
-    this.spatialPlayer = new SpatialPlayer(texture, null, this.props.spatialProps)
+    this.spatialPlayer = new SpatialPlayer(texture, null, this._props.spatialProps)
     this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
 
     this.scene.add(this.spatialPlayer)
@@ -231,7 +232,7 @@ export default class Player {
     this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
     this.camera.updateProjectionMatrix();
 
-    if (this.props.enableMouseMove) {
+    if (this._props.enableMouseMove) {
       window.addEventListener('mousemove', this.onMouseMove.bind(this))
     }
   }
@@ -250,7 +251,7 @@ export default class Player {
   }
   
   private render(): void {
-    if (this.props.enableMouseMove)
+    if (this._props.enableMouseMove)
     {
       this.aniCurTime += this.clock.getDelta()
 
@@ -273,7 +274,11 @@ export default class Player {
   }
 
   public get aspectRatio(): number {
-    return this.props.container.clientWidth / this.props.container.clientHeight
+    return this._props.container.clientWidth / this._props.container.clientHeight
+  }
+
+  public get props(): PlayerProps {
+    return this._props
   }
 
   EasingFunctions = {
