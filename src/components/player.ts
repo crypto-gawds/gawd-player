@@ -127,27 +127,28 @@ export default class Player {
       this.scene = new Scene();
 
       this.renderer = new WebGLRenderer({ antialias: true });
-      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
       this.renderer.xr.enabled = false;
       this._props.container.appendChild(this.renderer.domElement);
 
       this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
-      this.camera.position
-
-      this.scene.add(this.camera);
-
       this.camera.position.z = 10;
-
+      this.scene.add(this.camera);
+      
+      this.resize()
+      
       this.renderer.setAnimationLoop(() => {
         this.render()
       });
 
-      window.addEventListener('resize', ev => {
-        this.camera.aspect = this.aspectRatio
-        this.camera.updateProjectionMatrix()
-        this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
-      })
+      window.addEventListener('resize', this.resize.bind(this))
     }
+  }
+
+  private resize(): void
+  {
+    this.camera.aspect = this.aspectRatio
+    this.camera.updateProjectionMatrix()
+    this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
   }
 
   private initGawd(gawd: Gawd): void {
@@ -286,6 +287,15 @@ export default class Player {
     amount = amount < 0 ? 0 : amount;
     amount = amount > 1 ? 1 : amount;
     return value1 + (value2 - value1) * amount;
+  }
+
+  public dispose(): void
+  {
+    this.scene.remove(this.spatialPlayer)
+    this.spatialPlayer.dispose()
+
+    window.removeEventListener('mousemove', this.onMouseMove.bind(this))
+    window.removeEventListener('resize', this.resize.bind(this))
   }
 
   public get aspectRatio(): number {
