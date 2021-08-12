@@ -292,7 +292,7 @@
     constructor(props) {
       var _this = this;
 
-      this.props = new Props();
+      this._props = new Props();
       this.scene = void 0;
       this.renderer = void 0;
       this.spatialPlayer = void 0;
@@ -359,42 +359,42 @@
         }
       };
       // Defaults
-      this.props.spatialProps.spatialType = threeSpatialViewer.SpatialType.LOOKING_GLASS;
-      this.props.spatialProps.stereoMode = threeSpatialViewer.StereoMode.OFF; // Default desktop asset
+      this._props.spatialProps.spatialType = threeSpatialViewer.SpatialType.LOOKING_GLASS;
+      this._props.spatialProps.stereoMode = threeSpatialViewer.StereoMode.OFF; // Default desktop asset
 
-      this.props.defaultAsset.spatial = 'lookingglass';
-      this.props.defaultAsset.quiltType = 'FourKSquare';
-      this.props.defaultAsset.size = new Resolution();
-      this.props.defaultAsset.size.width = 4320;
-      this.props.defaultAsset.contentType = 'image/png'; // Default mobile asset
+      this._props.defaultAsset.spatial = 'lookingglass';
+      this._props.defaultAsset.quiltType = 'FourKSquare';
+      this._props.defaultAsset.size = new Resolution();
+      this._props.defaultAsset.size.width = 4320;
+      this._props.defaultAsset.contentType = 'image/png'; // Default mobile asset
 
-      this.props.defaultMobileAsset.spatial = '2d';
-      this.props.defaultMobileAsset.size = new Resolution();
-      this.props.defaultMobileAsset.size.width = 1080;
-      this.props.defaultMobileAsset.contentType = 'video/mp4';
-      this.setProps(this.props, props);
+      this._props.defaultMobileAsset.spatial = '2d';
+      this._props.defaultMobileAsset.size = new Resolution();
+      this._props.defaultMobileAsset.size.width = 1080;
+      this._props.defaultMobileAsset.contentType = 'video/mp4';
+      this.setProps(this._props, props);
       this.clock = new three.Clock();
 
-      if (this.props.container) {
+      if (this._props.container) {
         this.initThree();
       } else {
         console.warn("No container was set");
         return;
       }
 
-      if (this.props.url) {
-        this.loadGawdConfig(this.props.url).then(function (data) {
+      if (this._props.url) {
+        this.loadGawdConfig(this._props.url).then(function (data) {
           _this.initGawd(data);
         });
       }
     }
 
-    setProps(viewerProps, userProps) {
+    setProps(playerProps, userProps) {
       if (!userProps) return;
 
       for (var prop in userProps) {
-        if (prop in viewerProps) {
-          viewerProps[prop] = userProps[prop];
+        if (prop in playerProps) {
+          playerProps[prop] = userProps[prop];
         } else {
           console.warn("GawdViewer: Provided ".concat(prop, " in config but it is not a valid property and will be ignored"));
         }
@@ -408,9 +408,11 @@
       this.renderer = new three.WebGLRenderer({
         antialias: true
       });
-      this.renderer.setSize(this.props.container.clientWidth, this.props.container.clientHeight);
+      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
       this.renderer.xr.enabled = false;
-      this.props.container.appendChild(this.renderer.domElement);
+
+      this._props.container.appendChild(this.renderer.domElement);
+
       this.camera = new three.PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
       this.camera.position;
       this.scene.add(this.camera);
@@ -423,7 +425,7 @@
 
         _this2.camera.updateProjectionMatrix();
 
-        _this2.renderer.setSize(_this2.props.container.clientWidth, _this2.props.container.clientHeight);
+        _this2.renderer.setSize(_this2._props.container.clientWidth, _this2._props.container.clientHeight);
       });
     }
 
@@ -437,7 +439,7 @@
       if (result.os.match(/iOS|android/i)) {
         // Default mobile asset 
         lkgAsset = gawd.assets.filter(function (a) {
-          return a.spatial == _this3.props.defaultMobileAsset.spatial && a.size.width == _this3.props.defaultMobileAsset.size.width && (a.quiltType == _this3.props.defaultMobileAsset.quiltType || !_this3.props.defaultMobileAsset.quiltType) && a.contentType == _this3.props.defaultMobileAsset.contentType;
+          return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
         })[0];
 
         if (lkgAsset) {
@@ -448,7 +450,7 @@
 
 
       lkgAsset = gawd.assets.filter(function (a) {
-        return a.spatial == _this3.props.defaultAsset.spatial && a.size.width == _this3.props.defaultAsset.size.width && (a.quiltType == _this3.props.defaultAsset.quiltType || !_this3.props.defaultAsset.quiltType) && a.contentType == _this3.props.defaultAsset.contentType;
+        return a.spatial == _this3._props.defaultAsset.spatial && a.size.width == _this3._props.defaultAsset.size.width && (a.quiltType == _this3._props.defaultAsset.quiltType || !_this3._props.defaultAsset.quiltType) && a.contentType == _this3._props.defaultAsset.contentType;
       })[0];
       this.initMedia(lkgAsset);
     }
@@ -501,11 +503,11 @@
         config.rows = 1;
         config.width = asset.size.width;
         config.height = asset.size.height;
-        this.props.enableMouseMove = false;
+        this._props.enableMouseMove = false;
       }
 
-      this.props.spatialProps.quilt = config;
-      this.spatialPlayer = new threeSpatialViewer.Player(texture, null, this.props.spatialProps);
+      this._props.spatialProps.quilt = config;
+      this.spatialPlayer = new threeSpatialViewer.Player(texture, null, this._props.spatialProps);
       this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
       this.scene.add(this.spatialPlayer);
       var dist = this.camera.position.z - this.spatialPlayer.position.z;
@@ -514,7 +516,7 @@
       this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
       this.camera.updateProjectionMatrix();
 
-      if (this.props.enableMouseMove) {
+      if (this._props.enableMouseMove) {
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
       }
     }
@@ -535,7 +537,7 @@
     }
 
     render() {
-      if (this.props.enableMouseMove) {
+      if (this._props.enableMouseMove) {
         this.aniCurTime += this.clock.getDelta();
 
         if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
@@ -553,7 +555,11 @@
     }
 
     get aspectRatio() {
-      return this.props.container.clientWidth / this.props.container.clientHeight;
+      return this._props.container.clientWidth / this._props.container.clientHeight;
+    }
+
+    get props() {
+      return this._props;
     }
 
   }

@@ -1,4 +1,5 @@
 import { SpatialProps } from './spatial-viewer';
+import { PlayerProps } from '..';
 declare class Props {
     url: string;
     container: HTMLElement;
@@ -31,7 +32,7 @@ declare class Resolution {
 }
 export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution };
 export default class Player {
-    private props;
+    private _props;
     private scene;
     private renderer;
     private spatialPlayer;
@@ -54,6 +55,7 @@ export default class Player {
     private render;
     private lerp;
     get aspectRatio(): number;
+    get props(): PlayerProps;
     EasingFunctions: {
         linear: (t: any) => any;
         easeInQuad: (t: any) => number;
