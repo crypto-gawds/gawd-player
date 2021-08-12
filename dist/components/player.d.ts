@@ -12,6 +12,7 @@ declare class Gawd {
     name: string;
     hash: string;
     assets: Array<GawdAsset>;
+    constructor(init?: Partial<Gawd>);
 }
 declare class GawdAsset {
     url: string;
@@ -21,14 +22,17 @@ declare class GawdAsset {
     size: Resolution;
     viewSize: Resolution;
     contentType: string;
+    constructor(init?: Partial<GawdAsset>);
 }
 declare class GawdQuilt {
     columns: number;
     rows: number;
+    constructor(init?: Partial<GawdQuilt>);
 }
 declare class Resolution {
     width: number;
     height: number;
+    constructor(init?: Partial<Resolution>);
 }
 export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution };
 export default class Player {

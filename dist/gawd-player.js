@@ -243,24 +243,42 @@
       this.url = void 0;
       this.container = void 0;
       this.enableMouseMove = true;
-      this.defaultAsset = new GawdAsset();
-      this.defaultMobileAsset = new GawdAsset();
-      this.spatialProps = new threeSpatialViewer.Props();
+      this.defaultAsset = new GawdAsset({
+        spatial: 'lookingglass',
+        quiltType: 'FourKSquare',
+        size: new Resolution({
+          width: 4320
+        }),
+        contentType: 'image/png'
+      });
+      this.defaultMobileAsset = new GawdAsset({
+        spatial: '2d',
+        size: new Resolution({
+          width: 1080
+        }),
+        contentType: 'video/mp4'
+      });
+      this.spatialProps = {
+        spatialType: threeSpatialViewer.SpatialType.LOOKING_GLASS,
+        stereoMode: threeSpatialViewer.StereoMode.OFF,
+        quilt: null
+      };
     }
 
   }
 
   class Gawd {
-    constructor() {
+    constructor(init) {
       this.name = void 0;
       this.hash = void 0;
       this.assets = void 0;
+      Object.assign(this, init);
     }
 
   }
 
   class GawdAsset {
-    constructor() {
+    constructor(init) {
       this.url = void 0;
       this.spatial = void 0;
       this.quilt = void 0;
@@ -268,22 +286,25 @@
       this.size = void 0;
       this.viewSize = void 0;
       this.contentType = void 0;
+      Object.assign(this, init);
     }
 
   }
 
   class GawdQuilt {
-    constructor() {
+    constructor(init) {
       this.columns = void 0;
       this.rows = void 0;
+      Object.assign(this, init);
     }
 
   }
 
   class Resolution {
-    constructor() {
+    constructor(init) {
       this.width = void 0;
       this.height = void 0;
+      Object.assign(this, init);
     }
 
   }
@@ -358,20 +379,6 @@
           return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * --t * t * t * t * t;
         }
       };
-      // Defaults
-      this._props.spatialProps.spatialType = threeSpatialViewer.SpatialType.LOOKING_GLASS;
-      this._props.spatialProps.stereoMode = threeSpatialViewer.StereoMode.OFF; // Default desktop asset
-
-      this._props.defaultAsset.spatial = 'lookingglass';
-      this._props.defaultAsset.quiltType = 'FourKSquare';
-      this._props.defaultAsset.size = new Resolution();
-      this._props.defaultAsset.size.width = 4320;
-      this._props.defaultAsset.contentType = 'image/png'; // Default mobile asset
-
-      this._props.defaultMobileAsset.spatial = '2d';
-      this._props.defaultMobileAsset.size = new Resolution();
-      this._props.defaultMobileAsset.size.width = 1080;
-      this._props.defaultMobileAsset.contentType = 'video/mp4';
       this.setProps(this._props, props);
       this.clock = new three.Clock();
 
