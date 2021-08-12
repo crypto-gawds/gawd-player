@@ -1,5 +1,5 @@
 import { QuiltConfig, Player as Player$1, SpatialType, StereoMode } from 'three-spatial-viewer';
-import { Clock, Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture, LinearMipmapLinearFilter } from 'three';
+import { Clock, Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -317,6 +317,7 @@ class Player {
     this.camera = void 0;
     this.clock = void 0;
     this.gawd = void 0;
+    this.video = void 0;
     this.startAngle = 0;
     this.targetAngle = 0;
     this.totalAngles = 0;
@@ -379,9 +380,7 @@ class Player {
     this.setProps(this._props, props);
     this.clock = new Clock();
 
-    if (this._props.container) {
-      this.initThree();
-    } else {
+    if (!this._props.container) {
       console.warn("No container was set");
       return;
     }
@@ -408,29 +407,31 @@ class Player {
   initThree() {
     var _this2 = this;
 
-    this.scene = new Scene();
-    this.renderer = new WebGLRenderer({
-      antialias: true
-    });
-    this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
-    this.renderer.xr.enabled = false;
+    if (!this.scene) {
+      this.scene = new Scene();
+      this.renderer = new WebGLRenderer({
+        antialias: true
+      });
+      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
+      this.renderer.xr.enabled = false;
 
-    this._props.container.appendChild(this.renderer.domElement);
+      this._props.container.appendChild(this.renderer.domElement);
 
-    this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
-    this.camera.position;
-    this.scene.add(this.camera);
-    this.camera.position.z = 10;
-    this.renderer.setAnimationLoop(function () {
-      _this2.render();
-    });
-    window.addEventListener('resize', function (ev) {
-      _this2.camera.aspect = _this2.aspectRatio;
+      this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
+      this.camera.position;
+      this.scene.add(this.camera);
+      this.camera.position.z = 10;
+      this.renderer.setAnimationLoop(function () {
+        _this2.render();
+      });
+      window.addEventListener('resize', function (ev) {
+        _this2.camera.aspect = _this2.aspectRatio;
 
-      _this2.camera.updateProjectionMatrix();
+        _this2.camera.updateProjectionMatrix();
 
-      _this2.renderer.setSize(_this2._props.container.clientWidth, _this2._props.container.clientHeight);
-    });
+        _this2.renderer.setSize(_this2._props.container.clientWidth, _this2._props.container.clientHeight);
+      });
+    }
   }
 
   initGawd(gawd) {
@@ -472,23 +473,26 @@ class Player {
       }.bind(this));
     } else if (asset.contentType == 'video/mp4') {
       var videoId = "gawd-video-" + this.gawd.hash;
-      var video = document.getElementById(videoId);
+      this.video = document.getElementById(videoId);
 
-      if (!video) {
-        video = document.createElement('video');
-        video.id = videoId;
-        video.src = asset.url;
-        video.crossOrigin = "anonymous";
-        video.muted = true;
-        video.autoplay = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.style.display = "none";
-        document.body.appendChild(video);
-        video.play();
+      if (!this.video) {
+        this.video = document.createElement('video');
+        this.video.id = videoId;
+        this.video.src = asset.url;
+        this.video.crossOrigin = "anonymous";
+        this.video.muted = true;
+        this.video.preload = "auto";
+        this.video.autoplay = true;
+        this.video.loop = true;
+        this.video.playsInline = true;
+        this.video.style.width = "100%";
+        this.video.style.height = "100%";
+        this.video.style.display = "none";
+        this.props.container.appendChild(this.video);
+        this.video.play();
       }
 
-      var videoTex = new VideoTexture(video);
+      var videoTex = new VideoTexture(this.video);
       this.loadSpatialPlayer(videoTex, asset);
     }
   }
@@ -497,34 +501,27 @@ class Player {
     var config = new QuiltConfig();
 
     if (asset.quilt) {
+      this.initThree();
       config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8;
       config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6;
       config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480;
       config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640;
+      this._props.spatialProps.quilt = config;
+      this.spatialPlayer = new Player$1(texture, null, this._props.spatialProps);
+      this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
+      this.scene.add(this.spatialPlayer);
+      var dist = this.camera.position.z - this.spatialPlayer.position.z;
+      var height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
+
+      this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
+      this.camera.updateProjectionMatrix();
+
+      if (this._props.enableMouseMove) {
+        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+      }
     } else {
-      // disable quilt 
-      config.columns = 1;
-      config.rows = 1;
-      config.width = asset.size.width;
-      config.height = asset.size.height;
+      this.video.style.display = '';
       this._props.enableMouseMove = false;
-    }
-
-    this._props.spatialProps.quilt = config;
-    this.spatialPlayer = new Player$1(texture, null, this._props.spatialProps);
-    var tex = this.spatialPlayer.texture;
-    tex.minFilter = LinearMipmapLinearFilter;
-    this.spatialPlayer.texture = tex;
-    this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
-    this.scene.add(this.spatialPlayer);
-    var dist = this.camera.position.z - this.spatialPlayer.position.z;
-    var height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
-
-    this.camera.fov = Math.atan(height / dist) * (180 / Math.PI);
-    this.camera.updateProjectionMatrix();
-
-    if (this._props.enableMouseMove) {
-      window.addEventListener('mousemove', this.onMouseMove.bind(this));
     }
   }
 

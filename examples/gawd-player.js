@@ -1,4 +1,8 @@
-define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpatialViewer, three) { 'use strict';
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('three-spatial-viewer'), require('three')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'three-spatial-viewer', 'three'], factory) :
+  (global = global || self, factory(global.CryptoGawd = {}, global.SpatialViewer, global.THREE));
+}(this, (function (exports, threeSpatialViewer, three) { 'use strict';
 
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
@@ -406,31 +410,29 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
     initThree() {
       var _this2 = this;
 
-      if (!this.scene) {
-        this.scene = new three.Scene();
-        this.renderer = new three.WebGLRenderer({
-          antialias: true
-        });
-        this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
-        this.renderer.xr.enabled = false;
+      this.scene = new three.Scene();
+      this.renderer = new three.WebGLRenderer({
+        antialias: true
+      });
+      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
+      this.renderer.xr.enabled = false;
 
-        this._props.container.appendChild(this.renderer.domElement);
+      this._props.container.appendChild(this.renderer.domElement);
 
-        this.camera = new three.PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
-        this.camera.position;
-        this.scene.add(this.camera);
-        this.camera.position.z = 10;
-        this.renderer.setAnimationLoop(function () {
-          _this2.render();
-        });
-        window.addEventListener('resize', function (ev) {
-          _this2.camera.aspect = _this2.aspectRatio;
+      this.camera = new three.PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
+      this.camera.position;
+      this.scene.add(this.camera);
+      this.camera.position.z = 10;
+      this.renderer.setAnimationLoop(function () {
+        _this2.render();
+      });
+      window.addEventListener('resize', function (ev) {
+        _this2.camera.aspect = _this2.aspectRatio;
 
-          _this2.camera.updateProjectionMatrix();
+        _this2.camera.updateProjectionMatrix();
 
-          _this2.renderer.setSize(_this2._props.container.clientWidth, _this2._props.container.clientHeight);
-        });
-      }
+        _this2.renderer.setSize(_this2._props.container.clientWidth, _this2._props.container.clientHeight);
+      });
     }
 
     initGawd(gawd) {
@@ -440,7 +442,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
       var result = detect();
       var lkgAsset = null;
 
-      if (result.os.match(/iOS|android/i)) {
+      if (result.os.match(/iOS|android/i) || true) {
         // Default mobile asset 
         lkgAsset = gawd.assets.filter(function (a) {
           return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
@@ -519,6 +521,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
           window.addEventListener('mousemove', this.onMouseMove.bind(this));
         }
       } else {
+        console.log("here");
         this.video.style.display = '';
         this._props.enableMouseMove = false;
       }
@@ -575,5 +578,5 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-});
-//# sourceMappingURL=gawd-player.amd.js.map
+})));
+//# sourceMappingURL=gawd-player.js.map

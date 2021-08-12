@@ -43,6 +43,7 @@ export default class Player {
     private camera;
     private clock;
     private gawd;
+    private video;
     private startAngle;
     private targetAngle;
     private totalAngles;
