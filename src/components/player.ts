@@ -1,7 +1,7 @@
 import { SpatialType, StereoMode, SpatialPlayer, QuiltConfig, SpatialProps } from './spatial-viewer'
 import { WebGLRenderer, PerspectiveCamera, Scene, TextureLoader, Texture, VideoTexture } from './three'
 import { detect } from 'detect-browser';
-import { Clock } from 'three';
+import { Clock, LinearMipmapLinearFilter, LinearMipMapNearestFilter } from 'three';
 import { PlayerProps } from '..';
 
 class Props {
@@ -155,7 +155,7 @@ export default class Player {
     const result = detect()
     let lkgAsset: GawdAsset = null;
 
-    if (result.os.match(/iOS|android/i)) {
+    if (result.os.match(/iOS|android/i) || true) {
       // Default mobile asset 
       lkgAsset = gawd.assets.filter(a => 
         a.spatial == this._props.defaultMobileAsset.spatial && 
@@ -237,6 +237,10 @@ export default class Player {
     this._props.spatialProps.quilt = config
 
     this.spatialPlayer = new SpatialPlayer(texture, null, this._props.spatialProps)
+    let tex:Texture = this.spatialPlayer.texture
+    tex.minFilter = LinearMipmapLinearFilter
+    this.spatialPlayer.texture = tex
+
     this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
 
     this.scene.add(this.spatialPlayer)
