@@ -8,15 +8,34 @@ class Props {
   public url: string
   public container: HTMLElement
   public enableMouseMove: Boolean = true
-  public defaultAsset: GawdAsset = new GawdAsset()
-  public defaultMobileAsset: GawdAsset = new GawdAsset()
-  public spatialProps: SpatialProps = new SpatialProps()
+  public defaultAsset: GawdAsset = new GawdAsset({
+    spatial: 'lookingglass',
+    quiltType: 'FourKSquare',
+    size: new Resolution({ width: 4320 }),
+    contentType: 'image/png'
+  })
+
+  public defaultMobileAsset: GawdAsset = new GawdAsset({
+    spatial: '2d',
+    size: new Resolution({ width: 1080 }),
+    contentType: 'video/mp4'
+  })
+
+  public spatialProps: SpatialProps = {
+    spatialType: SpatialType.LOOKING_GLASS,
+    stereoMode: StereoMode.OFF,
+    quilt: null
+  }
 }
 
 class Gawd {
   public name: string
   public hash: string
   public assets: Array<GawdAsset>
+
+  public constructor(init?:Partial<Gawd>) {
+    Object.assign(this, init);
+  }
 }
 
 class GawdAsset {
@@ -27,16 +46,28 @@ class GawdAsset {
   public size: Resolution
   public viewSize: Resolution
   public contentType: string
+  
+  public constructor(init?:Partial<GawdAsset>) {
+    Object.assign(this, init);
+  }
 }
 
 class GawdQuilt {
   public columns: number
   public rows: number
+
+  public constructor(init?:Partial<GawdQuilt>) {
+    Object.assign(this, init);
+  }
 }
 
 class Resolution {
   public width: number
   public height: number
+
+  public constructor(init?:Partial<Resolution>) {
+    Object.assign(this, init);
+  }
 }
 
 export { Props as PlayerProps, Gawd, GawdAsset, GawdQuilt, Resolution }
@@ -59,23 +90,6 @@ export default class Player {
   private aniDuration: number = 0.5
 
   constructor(props?: Props) {
-    // Defaults
-    this._props.spatialProps.spatialType = SpatialType.LOOKING_GLASS
-    this._props.spatialProps.stereoMode  = StereoMode.OFF
-
-    // Default desktop asset
-    this._props.defaultAsset.spatial = 'lookingglass'
-    this._props.defaultAsset.quiltType = 'FourKSquare'
-    this._props.defaultAsset.size = new Resolution()
-    this._props.defaultAsset.size.width = 4320
-    this._props.defaultAsset.contentType = 'image/png'
-
-    // Default mobile asset
-    this._props.defaultMobileAsset.spatial = '2d'
-    this._props.defaultMobileAsset.size = new Resolution()
-    this._props.defaultMobileAsset.size.width = 1080
-    this._props.defaultMobileAsset.contentType = 'video/mp4'
-
     this.setProps(this._props, props)
 
     this.clock = new Clock();
