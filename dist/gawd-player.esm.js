@@ -1,5 +1,5 @@
 import { QuiltConfig, Player as Player$1, SpatialType, StereoMode } from 'three-spatial-viewer';
-import { Clock, Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
+import { Clock, Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture, LinearMipmapLinearFilter } from 'three';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -440,7 +440,7 @@ class Player {
     var result = detect();
     var lkgAsset = null;
 
-    if (result.os.match(/iOS|android/i)) {
+    if (result.os.match(/iOS|android/i) || true) {
       // Default mobile asset 
       lkgAsset = gawd.assets.filter(function (a) {
         return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
@@ -512,6 +512,9 @@ class Player {
 
     this._props.spatialProps.quilt = config;
     this.spatialPlayer = new Player$1(texture, null, this._props.spatialProps);
+    var tex = this.spatialPlayer.texture;
+    tex.minFilter = LinearMipmapLinearFilter;
+    this.spatialPlayer.texture = tex;
     this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
     this.scene.add(this.spatialPlayer);
     var dist = this.camera.position.z - this.spatialPlayer.position.z;

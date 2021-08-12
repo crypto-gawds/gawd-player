@@ -439,7 +439,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
       var result = detect();
       var lkgAsset = null;
 
-      if (result.os.match(/iOS|android/i)) {
+      if (result.os.match(/iOS|android/i) || true) {
         // Default mobile asset 
         lkgAsset = gawd.assets.filter(function (a) {
           return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
@@ -511,6 +511,9 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
       this._props.spatialProps.quilt = config;
       this.spatialPlayer = new threeSpatialViewer.Player(texture, null, this._props.spatialProps);
+      var tex = this.spatialPlayer.texture;
+      tex.minFilter = three.LinearMipmapLinearFilter;
+      this.spatialPlayer.texture = tex;
       this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
       this.scene.add(this.spatialPlayer);
       var dist = this.camera.position.z - this.spatialPlayer.position.z;
