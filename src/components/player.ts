@@ -1,7 +1,7 @@
 import { SpatialType, StereoMode, SpatialPlayer, QuiltConfig, SpatialProps } from './spatial-viewer'
 import { WebGLRenderer, PerspectiveCamera, Scene, TextureLoader, Texture, VideoTexture } from './three'
 import { detect } from 'detect-browser';
-import { Clock, LinearMipmapLinearFilter, LinearMipMapNearestFilter } from 'three';
+import { Clock } from 'three';
 import { PlayerProps } from '..';
 
 class Props {
@@ -81,6 +81,7 @@ export default class Player {
   private camera: PerspectiveCamera
   private clock: Clock
   private gawd: Gawd
+  private video: HTMLVideoElement
 
   // Animation
   private startAngle: number = 0
@@ -94,10 +95,7 @@ export default class Player {
 
     this.clock = new Clock();
 
-    if (this._props.container) {
-      this.initThree()
-    }
-    else {
+    if (!this._props.container) {
       console.warn(`No container was set`)
       return;
     }
@@ -124,29 +122,32 @@ export default class Player {
   }
   
   private initThree(): void {
-    this.scene = new Scene();
+    if (!this.scene)
+    {
+      this.scene = new Scene();
 
-    this.renderer = new WebGLRenderer({ antialias: true });
-    this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
-    this.renderer.xr.enabled = false;
-    this._props.container.appendChild(this.renderer.domElement);
+      this.renderer = new WebGLRenderer({ antialias: true });
+      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
+      this.renderer.xr.enabled = false;
+      this._props.container.appendChild(this.renderer.domElement);
 
-    this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
-    this.camera.position
+      this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
+      this.camera.position
 
-    this.scene.add(this.camera);
+      this.scene.add(this.camera);
 
-    this.camera.position.z = 10;
+      this.camera.position.z = 10;
 
-    this.renderer.setAnimationLoop(() => {
-      this.render()
-    });
+      this.renderer.setAnimationLoop(() => {
+        this.render()
+      });
 
-    window.addEventListener('resize', ev => {
-      this.camera.aspect = this.aspectRatio
-      this.camera.updateProjectionMatrix()
-      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
-    })
+      window.addEventListener('resize', ev => {
+        this.camera.aspect = this.aspectRatio
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
+      })
+    }
   }
 
   private initGawd(gawd: Gawd): void {
@@ -192,24 +193,27 @@ export default class Player {
     }
     else if (asset.contentType == 'video/mp4') {
       const videoId = "gawd-video-" + this.gawd.hash
-      let video = document.getElementById(videoId) as HTMLVideoElement
+      this.video = document.getElementById(videoId) as HTMLVideoElement
 
-      if (!video)
+      if (!this.video)
       {
-        video = document.createElement('video') as HTMLVideoElement
-        video.id = videoId
-        video.src = asset.url
-        video.crossOrigin = "anonymous"
-        video.muted = true
-        video.autoplay = true
-        video.loop = true
-        video.playsInline = true
-        video.style.display = "none"
-        document.body.appendChild(video);
-        video.play();
+        this.video = document.createElement('video') as HTMLVideoElement
+        this.video.id = videoId
+        this.video.src = asset.url
+        this.video.crossOrigin = "anonymous"
+        this.video.muted = true
+        this.video.preload = "auto"
+        this.video.autoplay = true
+        this.video.loop = true
+        this.video.playsInline = true
+        this.video.style.width = "100%"
+        this.video.style.height = "100%"
+        this.video.style.display = "none"
+        this.props.container.appendChild(this.video);
+        this.video.play();
       }
         
-      const videoTex = new VideoTexture(video);
+      const videoTex = new VideoTexture(this.video);
       this.loadSpatialPlayer(videoTex, asset)
     }
   }
@@ -219,39 +223,32 @@ export default class Player {
 
     if (asset.quilt)
     {
+      this.initThree()
+
       config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8
       config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6
       config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480
       config.height = asset.viewSize.height > 0 ? asset.viewSize.height : 640
+      this._props.spatialProps.quilt = config
+
+      this.spatialPlayer = new SpatialPlayer(texture, null, this._props.spatialProps)
+      this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
+      this.scene.add(this.spatialPlayer)
+      
+
+      let dist = this.camera.position.z - this.spatialPlayer.position.z
+      let height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
+      this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
+      this.camera.updateProjectionMatrix();
+
+      if (this._props.enableMouseMove) {
+        window.addEventListener('mousemove', this.onMouseMove.bind(this))
+      }
     }
     else
     {
-      // disable quilt 
-      config.columns = 1
-      config.rows = 1
-      config.width = asset.size.width
-      config.height = asset.size.height
+      this.video.style.display = ''
       this._props.enableMouseMove = false
-    }
-
-    this._props.spatialProps.quilt = config
-
-    this.spatialPlayer = new SpatialPlayer(texture, null, this._props.spatialProps)
-    let tex:Texture = this.spatialPlayer.texture
-    tex.minFilter = LinearMipmapLinearFilter
-    this.spatialPlayer.texture = tex
-
-    this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
-
-    this.scene.add(this.spatialPlayer)
-
-    let dist = this.camera.position.z - this.spatialPlayer.position.z
-    let height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
-    this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
-    this.camera.updateProjectionMatrix();
-
-    if (this._props.enableMouseMove) {
-      window.addEventListener('mousemove', this.onMouseMove.bind(this))
     }
   }
 
