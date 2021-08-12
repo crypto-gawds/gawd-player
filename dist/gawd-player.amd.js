@@ -411,26 +411,25 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
         this.renderer = new three.WebGLRenderer({
           antialias: true
         });
-        this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
         this.renderer.xr.enabled = false;
 
         this._props.container.appendChild(this.renderer.domElement);
 
         this.camera = new three.PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
-        this.camera.position;
-        this.scene.add(this.camera);
         this.camera.position.z = 10;
+        this.scene.add(this.camera);
+        this.resize();
         this.renderer.setAnimationLoop(function () {
           _this2.render();
         });
-        window.addEventListener('resize', function (ev) {
-          _this2.camera.aspect = _this2.aspectRatio;
-
-          _this2.camera.updateProjectionMatrix();
-
-          _this2.renderer.setSize(_this2._props.container.clientWidth, _this2._props.container.clientHeight);
-        });
+        window.addEventListener('resize', this.resize.bind(this));
       }
+    }
+
+    resize() {
+      this.camera.aspect = this.aspectRatio;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
     }
 
     initGawd(gawd) {
@@ -555,6 +554,13 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
       amount = amount < 0 ? 0 : amount;
       amount = amount > 1 ? 1 : amount;
       return value1 + (value2 - value1) * amount;
+    }
+
+    dispose() {
+      this.scene.remove(this.spatialPlayer);
+      this.spatialPlayer.dispose();
+      window.removeEventListener('mousemove', this.onMouseMove.bind(this));
+      window.removeEventListener('resize', this.resize.bind(this));
     }
 
     get aspectRatio() {

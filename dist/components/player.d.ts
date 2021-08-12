@@ -52,6 +52,7 @@ export default class Player {
     constructor(props?: Props);
     private setProps;
     private initThree;
+    private resize;
     private initGawd;
     private initMedia;
     private loadSpatialPlayer;
@@ -59,6 +60,7 @@ export default class Player {
     private onMouseMove;
     private render;
     private lerp;
+    dispose(): void;
     get aspectRatio(): number;
     get props(): PlayerProps;
     EasingFunctions: {
