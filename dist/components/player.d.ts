@@ -62,6 +62,7 @@ export default class Player {
     private resize;
     private initGawd;
     private initThumbnail;
+    private hideThumb;
     private initMedia;
     private initVideo;
     private loadSpatialPlayer;

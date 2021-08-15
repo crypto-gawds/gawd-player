@@ -492,7 +492,6 @@ class Player {
     this.thumbnail = document.createElement('img');
     this.thumbnail.src = thumbUrl;
     this.thumbnail.crossOrigin = "anonymous";
-    this.thumbnail.alt = this.gawd.name;
     this.thumbnail.style.width = "100%";
     this.thumbnail.style.height = "100%";
     this.thumbnail.style.position = "absolute";
@@ -501,7 +500,14 @@ class Player {
     this._props.container.appendChild(this.thumbnail);
   }
 
+  hideThumb() {
+    this.hideThumbnail = true;
+    this.thumbCurTime = 0;
+  }
+
   initMedia(asset, onLoad) {
+    var _this5 = this;
+
     if (!asset) {
       console.warn("No GawdAsset found!");
       return;
@@ -511,23 +517,28 @@ class Player {
       var loader = new TextureLoader();
       loader.load(asset.url, function (tex) {
         this.loadSpatialPlayer(tex, asset);
+        this.hideThumb();
 
         if (onLoad) {
           onLoad();
         }
       }.bind(this));
     } else if (asset.contentType == 'video/mp4') {
-      this.initVideo(asset);
-      var videoTex = new VideoTexture(this.video);
-      this.loadSpatialPlayer(videoTex, asset);
+      this.initVideo(asset, function () {
+        var videoTex = new VideoTexture(_this5.video);
 
-      if (onLoad) {
-        onLoad();
-      }
+        _this5.loadSpatialPlayer(videoTex, asset);
+
+        _this5.hideThumb();
+
+        if (onLoad) {
+          onLoad();
+        }
+      });
     }
   }
 
-  initVideo(asset) {
+  initVideo(asset, onLoad) {
     var videoId = "gawd-video-" + this.gawd.hash;
     this.video = document.getElementById(videoId);
 
@@ -544,6 +555,10 @@ class Player {
       this.video.style.height = "100%";
       this.video.style.display = "none";
       this.props.container.appendChild(this.video);
+
+      if (onLoad) {
+        this.video.oncanplay = onLoad();
+      }
     }
 
     this.video.src = asset.url;
@@ -578,9 +593,6 @@ class Player {
       this.video.style.display = '';
       this._props.enableMouseMove = false;
     }
-
-    this.hideThumbnail = true;
-    this.thumbCurTime = 0;
   }
 
   toggleDisplayMode() {
@@ -616,12 +628,12 @@ class Player {
   }
 
   getAnimationAsset() {
-    var _this5 = this;
+    var _this6 = this;
 
     return this.gawd.assets.sort(function (a1, a2) {
       return a2.size.width - a1.size.width;
     }).find(function (asset) {
-      return asset.contentType == _this5._props.animationAsset.contentType && asset.size.width <= _this5._props.animationAsset.size.width && asset.spatial == _this5._props.animationAsset.spatial;
+      return asset.contentType == _this6._props.animationAsset.contentType && asset.size.width <= _this6._props.animationAsset.size.width && asset.spatial == _this6._props.animationAsset.spatial;
     });
   }
 
