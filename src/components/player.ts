@@ -106,7 +106,7 @@ export default class Player {
 
   constructor(props?: Props) {
     this.setProps(this._props, props)
-
+    
     this.clock = new Clock();
 
     if (!this._props.container) {
@@ -212,12 +212,16 @@ export default class Player {
     this.thumbnail =  document.createElement('img') as HTMLImageElement
     this.thumbnail.src = thumbUrl
     this.thumbnail.crossOrigin = "anonymous"
-    this.thumbnail.alt = this.gawd.name
     this.thumbnail.style.width = "100%"
     this.thumbnail.style.height = "100%"
     this.thumbnail.style.position = "absolute"
     this.thumbnail.style.left = "0"
     this._props.container.appendChild(this.thumbnail)
+  }
+
+  private hideThumb(): void {
+    this.hideThumbnail = true
+    this.thumbCurTime = 0
   }
 
   private initMedia(asset: GawdAsset, onLoad?:() => void): void {
@@ -230,23 +234,25 @@ export default class Player {
       const loader = new TextureLoader()
       loader.load(asset.url, function (tex) {
         this.loadSpatialPlayer(tex, asset)
+        this.hideThumb()
         if (onLoad) {
           onLoad()
         }
       }.bind(this))
     }
     else if (asset.contentType == 'video/mp4') {
-      this.initVideo(asset)
-      
-      const videoTex = new VideoTexture(this.video);
-      this.loadSpatialPlayer(videoTex, asset)
-      if (onLoad) {
-        onLoad()
-      }
+      this.initVideo(asset, () => {
+        const videoTex = new VideoTexture(this.video);
+        this.loadSpatialPlayer(videoTex, asset)
+        this.hideThumb()
+        if (onLoad) {
+          onLoad()
+        }
+      })
     }
   }
 
-  private initVideo(asset: GawdAsset): void {
+  private initVideo(asset: GawdAsset, onLoad?:() => any): void {
     const videoId = "gawd-video-" + this.gawd.hash
     this.video = document.getElementById(videoId) as HTMLVideoElement
 
@@ -264,6 +270,10 @@ export default class Player {
       this.video.style.height = "100%"
       this.video.style.display = "none"
       this.props.container.appendChild(this.video);
+      
+      if (onLoad) {
+        this.video.oncanplay = onLoad()
+      }
     }
 
     this.video.src = asset.url
@@ -302,9 +312,6 @@ export default class Player {
       this.video.style.display = ''
       this._props.enableMouseMove = false
     }
-
-    this.hideThumbnail = true
-    this.thumbCurTime = 0
   }
 
   private toggleDisplayMode(): void {
