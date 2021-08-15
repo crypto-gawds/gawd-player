@@ -1,4 +1,4 @@
-import { QuiltConfig, Player as Player$1, SpatialType, StereoMode } from 'three-spatial-viewer';
+import { QuiltConfig, Player as Player$1, StereoMode, SpatialType } from 'three-spatial-viewer';
 import { Clock, Scene, WebGLRenderer, PerspectiveCamera, TextureLoader, VideoTexture } from 'three';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -240,6 +240,8 @@ class Props {
     this.url = void 0;
     this.container = void 0;
     this.enableMouseMove = true;
+    this.toggleModes = false;
+    this.defaultThumbnailSize = 640;
     this.defaultAsset = new GawdAsset({
       spatial: 'lookingglass',
       quiltType: 'FourKSquare',
@@ -255,12 +257,21 @@ class Props {
       }),
       contentType: 'video/mp4'
     });
+    this.animationAsset = new GawdAsset({
+      spatial: '2d',
+      size: new Resolution({
+        width: 1080
+      }),
+      contentType: 'video/mp4'
+    });
     this.spatialProps = {
       spatialType: SpatialType.LOOKING_GLASS,
       stereoMode: StereoMode.OFF,
       quilt: null
     };
-  }
+    this.gawdData = void 0;
+  } // optionally pass in all the data (instead of loading via json)
+
 
 }
 
@@ -318,11 +329,14 @@ class Player {
     this.clock = void 0;
     this.gawd = void 0;
     this.video = void 0;
+    this.thumbnail = void 0;
     this.startAngle = 0;
     this.targetAngle = 0;
     this.totalAngles = 0;
     this.aniCurTime = 0;
     this.aniDuration = 0.5;
+    this.hideThumbnail = false;
+    this.thumbCurTime = 0;
     this.EasingFunctions = {
       // no easing, no acceleration
       linear: function linear(t) {
@@ -383,9 +397,13 @@ class Player {
     if (!this._props.container) {
       console.warn("No container was set");
       return;
-    }
+    } // If passing in gawd data direclty, then just load immediately
 
-    if (this._props.url) {
+
+    if (this._props.gawdData && this._props.gawdData.assets && this._props.gawdData.assets.length > 0) {
+      this.initGawd(this._props.gawdData);
+    } // Otherwise load from json url
+    else if (this._props.url) {
       this.loadGawdConfig(this._props.url).then(function (data) {
         _this.initGawd(data);
       });
@@ -424,6 +442,10 @@ class Player {
         _this2.render();
       });
       window.addEventListener('resize', this.resize.bind(this));
+
+      if (this._props.toggleModes) {
+        this._props.container.addEventListener('click', this.toggleDisplayMode.bind(this));
+      }
     }
   }
 
@@ -438,28 +460,48 @@ class Player {
 
     this.gawd = gawd;
     var result = detect();
-    var lkgAsset = null;
+    var defaultAsset = null; // Default mobile asset 
 
     if (result.os.match(/iOS|android/i)) {
-      // Default mobile asset 
-      lkgAsset = gawd.assets.filter(function (a) {
+      defaultAsset = gawd.assets.filter(function (a) {
         return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
       })[0];
-
-      if (lkgAsset) {
-        this.initMedia(lkgAsset);
-        return;
-      }
-    } // Default desktop asset 
+    } // Default desktop asset
 
 
-    lkgAsset = gawd.assets.filter(function (a) {
-      return a.spatial == _this3._props.defaultAsset.spatial && a.size.width == _this3._props.defaultAsset.size.width && (a.quiltType == _this3._props.defaultAsset.quiltType || !_this3._props.defaultAsset.quiltType) && a.contentType == _this3._props.defaultAsset.contentType;
-    })[0];
-    this.initMedia(lkgAsset);
+    if (!defaultAsset) {
+      defaultAsset = gawd.assets.filter(function (a) {
+        return a.spatial == _this3._props.defaultAsset.spatial && a.size.width == _this3._props.defaultAsset.size.width && (a.quiltType == _this3._props.defaultAsset.quiltType || !_this3._props.defaultAsset.quiltType) && a.contentType == _this3._props.defaultAsset.contentType;
+      })[0];
+    }
+
+    this.initThumbnail();
+    this.initMedia(defaultAsset);
   }
 
-  initMedia(asset) {
+  initThumbnail() {
+    var _this4 = this;
+
+    // Get preferred thumb size
+    // if not, found it will use the next smallest thumb
+    var thumbUrl = this.gawd.assets.sort(function (a1, a2) {
+      return a1.size.width - a2.size.width;
+    }).find(function (asset) {
+      return asset.contentType == 'image/png' && asset.size.width >= _this4._props.defaultThumbnailSize;
+    }).url;
+    this.thumbnail = document.createElement('img');
+    this.thumbnail.src = thumbUrl;
+    this.thumbnail.crossOrigin = "anonymous";
+    this.thumbnail.alt = this.gawd.name;
+    this.thumbnail.style.width = "100%";
+    this.thumbnail.style.height = "100%";
+    this.thumbnail.style.position = "absolute";
+    this.thumbnail.style.left = "0";
+
+    this._props.container.appendChild(this.thumbnail);
+  }
+
+  initMedia(asset, onLoad) {
     if (!asset) {
       console.warn("No GawdAsset found!");
       return;
@@ -469,38 +511,50 @@ class Player {
       var loader = new TextureLoader();
       loader.load(asset.url, function (tex) {
         this.loadSpatialPlayer(tex, asset);
+
+        if (onLoad) {
+          onLoad();
+        }
       }.bind(this));
     } else if (asset.contentType == 'video/mp4') {
-      var videoId = "gawd-video-" + this.gawd.hash;
-      this.video = document.getElementById(videoId);
-
-      if (!this.video) {
-        this.video = document.createElement('video');
-        this.video.id = videoId;
-        this.video.src = asset.url;
-        this.video.crossOrigin = "anonymous";
-        this.video.muted = true;
-        this.video.preload = "auto";
-        this.video.autoplay = true;
-        this.video.loop = true;
-        this.video.playsInline = true;
-        this.video.style.width = "100%";
-        this.video.style.height = "100%";
-        this.video.style.display = "none";
-        this.props.container.appendChild(this.video);
-        this.video.play();
-      }
-
+      this.initVideo(asset);
       var videoTex = new VideoTexture(this.video);
       this.loadSpatialPlayer(videoTex, asset);
+
+      if (onLoad) {
+        onLoad();
+      }
     }
+  }
+
+  initVideo(asset) {
+    var videoId = "gawd-video-" + this.gawd.hash;
+    this.video = document.getElementById(videoId);
+
+    if (!this.video) {
+      this.video = document.createElement('video');
+      this.video.id = videoId;
+      this.video.crossOrigin = "anonymous";
+      this.video.muted = true;
+      this.video.preload = "auto";
+      this.video.autoplay = true;
+      this.video.loop = true;
+      this.video.playsInline = true;
+      this.video.style.width = "100%";
+      this.video.style.height = "100%";
+      this.video.style.display = "none";
+      this.props.container.appendChild(this.video);
+    }
+
+    this.video.src = asset.url;
+    this.video.play();
   }
 
   loadSpatialPlayer(texture, asset) {
     var config = new QuiltConfig();
+    this.initThree();
 
     if (asset.quilt) {
-      this.initThree();
       config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8;
       config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6;
       config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480;
@@ -508,6 +562,8 @@ class Player {
       this._props.spatialProps.quilt = config;
       this.spatialPlayer = new Player$1(texture, null, this._props.spatialProps);
       this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows;
+      this.spatialPlayer.quiltAngle = this.targetAngle = this.totalAngles / 2; // starting angle
+
       this.scene.add(this.spatialPlayer);
       var dist = this.camera.position.z - this.spatialPlayer.position.z;
       var height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
@@ -522,6 +578,51 @@ class Player {
       this.video.style.display = '';
       this._props.enableMouseMove = false;
     }
+
+    this.hideThumbnail = true;
+    this.thumbCurTime = 0;
+  }
+
+  toggleDisplayMode() {
+    if (this.spatialPlayer) {
+      this.spatialPlayer.quiltStereoEyeDistance = 8;
+
+      if (this.video && this.video.style.display == '') {
+        this.video.style.display = 'none';
+        this.renderer.domElement.style.display = '';
+        this.spatialPlayer.stereoMode = StereoMode.OFF;
+      } else if (this.spatialPlayer.stereoMode == StereoMode.OFF) {
+        this.spatialPlayer.stereoMode = StereoMode.COLOR;
+      } else if (this.spatialPlayer.stereoMode == StereoMode.COLOR) {
+        this.initVideo(this.getAnimationAsset());
+        this.renderer.domElement.style.display = 'none';
+        this.video.style.display = '';
+        this.video.play();
+      }
+    } else {
+      this._props.enableMouseMove = true;
+      this.initMedia(this.getQuiltPNGAsset(), function () {
+        this.video.style.display = 'none';
+        this.renderer.domElement.style.display = '';
+        this.spatialPlayer.stereoMode = StereoMode.OFF;
+      }.bind(this));
+    }
+  }
+
+  getQuiltPNGAsset() {
+    return this.gawd.assets.find(function (asset) {
+      return asset.contentType == 'image/png' && asset.quiltType == 'FourKSquare';
+    });
+  }
+
+  getAnimationAsset() {
+    var _this5 = this;
+
+    return this.gawd.assets.sort(function (a1, a2) {
+      return a2.size.width - a1.size.width;
+    }).find(function (asset) {
+      return asset.contentType == _this5._props.animationAsset.contentType && asset.size.width <= _this5._props.animationAsset.size.width && asset.spatial == _this5._props.animationAsset.spatial;
+    });
   }
 
   loadGawdConfig(url) {
@@ -540,15 +641,27 @@ class Player {
   }
 
   render() {
-    if (this._props.enableMouseMove) {
-      this.aniCurTime += this.clock.getDelta();
+    var delta = this.clock.getDelta();
 
-      if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
+    if (this._props.enableMouseMove) {
+      this.aniCurTime += delta;
+
+      if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1 && this.thumbnail.style.opacity == "0") {
         this.spatialPlayer.quiltAngle = Math.round(this.lerp(this.startAngle, this.targetAngle, this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)));
       }
     }
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.hideThumbnail) {
+      this.thumbCurTime += delta;
+
+      if (this.thumbnail && this.thumbnail.style.opacity != "0") {
+        this.thumbnail.style.opacity = this.lerp(1, 0, this.EasingFunctions.linear(this.thumbCurTime / 0.3)).toString();
+      }
+    }
+
+    if (this.scene) {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   lerp(value1, value2, amount) {
@@ -558,8 +671,14 @@ class Player {
   }
 
   dispose() {
-    this.scene.remove(this.spatialPlayer);
-    this.spatialPlayer.dispose();
+    if (this.scene) {
+      this.scene.remove(this.spatialPlayer);
+    }
+
+    if (this.spatialPlayer) {
+      this.spatialPlayer.dispose();
+    }
+
     window.removeEventListener('mousemove', this.onMouseMove.bind(this));
     window.removeEventListener('resize', this.resize.bind(this));
   }

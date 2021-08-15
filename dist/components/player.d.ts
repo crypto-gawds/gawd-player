@@ -4,9 +4,13 @@ declare class Props {
     url: string;
     container: HTMLElement;
     enableMouseMove: Boolean;
+    toggleModes: Boolean;
+    defaultThumbnailSize: number;
     defaultAsset: GawdAsset;
     defaultMobileAsset: GawdAsset;
+    animationAsset: GawdAsset;
     spatialProps: SpatialProps;
+    gawdData: Gawd;
 }
 declare class Gawd {
     name: string;
@@ -44,18 +48,26 @@ export default class Player {
     private clock;
     private gawd;
     private video;
+    private thumbnail;
     private startAngle;
     private targetAngle;
     private totalAngles;
     private aniCurTime;
     private aniDuration;
+    private hideThumbnail;
+    private thumbCurTime;
     constructor(props?: Props);
     private setProps;
     private initThree;
     private resize;
     private initGawd;
+    private initThumbnail;
     private initMedia;
+    private initVideo;
     private loadSpatialPlayer;
+    private toggleDisplayMode;
+    private getQuiltPNGAsset;
+    private getAnimationAsset;
     private loadGawdConfig;
     private onMouseMove;
     private render;
