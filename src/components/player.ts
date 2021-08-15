@@ -8,6 +8,7 @@ class Props {
   public url: string
   public container: HTMLElement
   public enableMouseMove: Boolean = true
+  public toggleModes: Boolean = false
   public defaultThumbnailSize: number = 640
   public defaultAsset: GawdAsset = new GawdAsset({
     spatial: 'lookingglass',
@@ -17,6 +18,12 @@ class Props {
   })
 
   public defaultMobileAsset: GawdAsset = new GawdAsset({
+    spatial: '2d',
+    size: new Resolution({ width: 1080 }),
+    contentType: 'video/mp4'
+  })
+
+  public animationAsset: GawdAsset = new GawdAsset({
     spatial: '2d',
     size: new Resolution({ width: 1080 }),
     contentType: 'video/mp4'
@@ -153,6 +160,10 @@ export default class Player {
       });
 
       window.addEventListener('resize', this.resize.bind(this))
+
+      if (this._props.toggleModes) {
+        this._props.container.addEventListener('click', this.toggleDisplayMode.bind(this))
+      }
     }
   }
 
@@ -187,7 +198,6 @@ export default class Player {
         a.contentType == this._props.defaultAsset.contentType )[0]
     }
 
-    // setTimeout(this.initMedia.bind(this, defaultAsset), 1000);
     this.initThumbnail()
     this.initMedia(defaultAsset)
   }
@@ -210,7 +220,7 @@ export default class Player {
     this._props.container.appendChild(this.thumbnail)
   }
 
-  private initMedia(asset: GawdAsset): void {
+  private initMedia(asset: GawdAsset, onLoad?:() => void): void {
     if (!asset) {
       console.warn("No GawdAsset found!");
       return
@@ -220,42 +230,53 @@ export default class Player {
       const loader = new TextureLoader()
       loader.load(asset.url, function (tex) {
         this.loadSpatialPlayer(tex, asset)
+        if (onLoad) {
+          onLoad()
+        }
       }.bind(this))
     }
     else if (asset.contentType == 'video/mp4') {
-      const videoId = "gawd-video-" + this.gawd.hash
-      this.video = document.getElementById(videoId) as HTMLVideoElement
-
-      if (!this.video)
-      {
-        this.video = document.createElement('video') as HTMLVideoElement
-        this.video.id = videoId
-        this.video.src = asset.url
-        this.video.crossOrigin = "anonymous"
-        this.video.muted = true
-        this.video.preload = "auto"
-        this.video.autoplay = true
-        this.video.loop = true
-        this.video.playsInline = true
-        this.video.style.width = "100%"
-        this.video.style.height = "100%"
-        this.video.style.display = "none"
-        this.props.container.appendChild(this.video);
-        this.video.play();
-      }
-        
+      this.initVideo(asset)
+      
       const videoTex = new VideoTexture(this.video);
       this.loadSpatialPlayer(videoTex, asset)
+      if (onLoad) {
+        onLoad()
+      }
     }
+  }
+
+  private initVideo(asset: GawdAsset): void {
+    const videoId = "gawd-video-" + this.gawd.hash
+    this.video = document.getElementById(videoId) as HTMLVideoElement
+
+    if (!this.video)
+    {
+      this.video = document.createElement('video') as HTMLVideoElement
+      this.video.id = videoId
+      this.video.crossOrigin = "anonymous"
+      this.video.muted = true
+      this.video.preload = "auto"
+      this.video.autoplay = true
+      this.video.loop = true
+      this.video.playsInline = true
+      this.video.style.width = "100%"
+      this.video.style.height = "100%"
+      this.video.style.display = "none"
+      this.props.container.appendChild(this.video);
+    }
+
+    this.video.src = asset.url
+    this.video.play();
   }
 
   private loadSpatialPlayer(texture: Texture, asset: GawdAsset): void {
     let config = new QuiltConfig();
 
+    this.initThree()
+
     if (asset.quilt)
     {
-      this.initThree()
-
       config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8
       config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6
       config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480
@@ -284,6 +305,49 @@ export default class Player {
 
     this.hideThumbnail = true
     this.thumbCurTime = 0
+  }
+
+  private toggleDisplayMode(): void {
+    if (this.spatialPlayer) {
+      this.spatialPlayer.quiltStereoEyeDistance = 8
+
+      if (this.video && this.video.style.display == '') {
+        this.video.style.display = 'none'
+        this.renderer.domElement.style.display = ''
+        this.spatialPlayer.stereoMode = StereoMode.OFF
+      }
+      else if (this.spatialPlayer.stereoMode == StereoMode.OFF) {
+        this.spatialPlayer.stereoMode = StereoMode.COLOR
+      }
+      else if (this.spatialPlayer.stereoMode == StereoMode.COLOR) {
+        this.initVideo(this.getAnimationAsset())
+        this.renderer.domElement.style.display = 'none'
+        this.video.style.display = ''
+        this.video.play()
+      }
+    }
+    else {
+      this._props.enableMouseMove = true
+      this.initMedia(this.getQuiltPNGAsset(), function() {
+        this.video.style.display = 'none'
+        this.renderer.domElement.style.display = ''
+        this.spatialPlayer.stereoMode = StereoMode.OFF
+      }.bind(this))
+    }
+  }
+
+  private getQuiltPNGAsset(): GawdAsset {
+    return this.gawd.assets                      
+      .find((asset) => asset.contentType == 'image/png'
+                    && asset.quiltType == 'FourKSquare')
+  }
+
+  private getAnimationAsset(): GawdAsset {
+    return this.gawd.assets                      
+      .sort((a1, a2) => a2.size.width - a1.size.width)
+      .find((asset) => asset.contentType == this._props.animationAsset.contentType 
+                    && asset.size.width <= this._props.animationAsset.size.width
+                    && asset.spatial == this._props.animationAsset.spatial)
   }
 
   private async loadGawdConfig(url: string): Promise<any> {
@@ -315,15 +379,17 @@ export default class Player {
 
     if (this.hideThumbnail) {
       this.thumbCurTime += delta
-
-      if (this.spatialPlayer && this.thumbnail && this.thumbnail.style.opacity != "0") {
+      
+      if (this.thumbnail && this.thumbnail.style.opacity != "0") {
         this.thumbnail.style.opacity = this.lerp(1, 0,
-          this.EasingFunctions.linear(this.thumbCurTime / 0.4)
+          this.EasingFunctions.linear(this.thumbCurTime / 0.3)
         ).toString()
       }
     }
     
-    this.renderer.render(this.scene, this.camera)
+    if (this.scene) {
+      this.renderer.render(this.scene, this.camera)
+    }
   }
 
   private lerp(value1: number, value2: number, amount: number) {
@@ -332,14 +398,15 @@ export default class Player {
     return value1 + (value2 - value1) * amount;
   }
 
-  private delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
-  } 
-
   public dispose(): void
   {
-    this.scene.remove(this.spatialPlayer)
-    this.spatialPlayer.dispose()
+    if (this.scene) {
+      this.scene.remove(this.spatialPlayer)
+    }
+
+    if (this.spatialPlayer) {
+      this.spatialPlayer.dispose()
+    }
 
     window.removeEventListener('mousemove', this.onMouseMove.bind(this))
     window.removeEventListener('resize', this.resize.bind(this))
