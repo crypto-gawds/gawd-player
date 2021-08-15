@@ -8,6 +8,7 @@ class Props {
   public url: string
   public container: HTMLElement
   public enableMouseMove: Boolean = true
+  public defaultThumbnailSize: number = 640
   public defaultAsset: GawdAsset = new GawdAsset({
     spatial: 'lookingglass',
     quiltType: 'FourKSquare',
@@ -26,6 +27,8 @@ class Props {
     stereoMode: StereoMode.OFF,
     quilt: null
   }
+
+  public gawdData: Gawd // optionally pass in all the data (instead of loading via json)
 }
 
 class Gawd {
@@ -82,6 +85,7 @@ export default class Player {
   private clock: Clock
   private gawd: Gawd
   private video: HTMLVideoElement
+  private thumbnail: HTMLImageElement
 
   // Animation
   private startAngle: number = 0
@@ -89,6 +93,9 @@ export default class Player {
   private totalAngles: number = 0
   private aniCurTime: number = 0
   private aniDuration: number = 0.5
+
+  private hideThumbnail: boolean = false
+  private thumbCurTime: number = 0
 
   constructor(props?: Props) {
     this.setProps(this._props, props)
@@ -100,7 +107,12 @@ export default class Player {
       return;
     }
 
-    if (this._props.url) {
+    // If passing in gawd data direclty, then just load immediately
+    if (this._props.gawdData && this._props.gawdData.assets && this._props.gawdData.assets.length > 0) {
+      this.initGawd(this._props.gawdData)
+    }
+    // Otherwise load from json url
+    else if (this._props.url) {
       this.loadGawdConfig(this._props.url).then(data => {
         this.initGawd(data)
       });
@@ -155,29 +167,47 @@ export default class Player {
     this.gawd = gawd
 
     const result = detect()
-    let lkgAsset: GawdAsset = null;
+    let defaultAsset: GawdAsset = null;
 
+    // Default mobile asset 
     if (result.os.match(/iOS|android/i)) {
-      // Default mobile asset 
-      lkgAsset = gawd.assets.filter(a => 
+      defaultAsset = gawd.assets.filter(a => 
         a.spatial == this._props.defaultMobileAsset.spatial && 
         a.size.width == this._props.defaultMobileAsset.size.width && 
         (a.quiltType == this._props.defaultMobileAsset.quiltType || !this._props.defaultMobileAsset.quiltType)  && 
         a.contentType == this._props.defaultMobileAsset.contentType)[0]
-      
-      if (lkgAsset) {
-        this.initMedia(lkgAsset)
-        return
-      }
     }
     
-    // Default desktop asset 
-    lkgAsset = gawd.assets.filter(a => 
-      a.spatial == this._props.defaultAsset.spatial && 
-      a.size.width == this._props.defaultAsset.size.width && 
-      (a.quiltType == this._props.defaultAsset.quiltType || !this._props.defaultAsset.quiltType)  && 
-      a.contentType == this._props.defaultAsset.contentType )[0]
-    this.initMedia(lkgAsset)
+    // Default desktop asset
+    if (!defaultAsset) {
+      defaultAsset = gawd.assets.filter(a => 
+        a.spatial == this._props.defaultAsset.spatial && 
+        a.size.width == this._props.defaultAsset.size.width && 
+        (a.quiltType == this._props.defaultAsset.quiltType || !this._props.defaultAsset.quiltType)  && 
+        a.contentType == this._props.defaultAsset.contentType )[0]
+    }
+
+    // setTimeout(this.initMedia.bind(this, defaultAsset), 1000);
+    this.initThumbnail()
+    this.initMedia(defaultAsset)
+  }
+
+  private initThumbnail(): void {
+    // Get preferred thumb size
+    // if not, found it will use the next smallest thumb
+    let thumbUrl = this.gawd.assets                      
+      .sort((a1, a2) => a1.size.width - a2.size.width)
+      .find((asset) => asset.contentType == 'image/png' && asset.size.width >= this._props.defaultThumbnailSize).url
+
+    this.thumbnail =  document.createElement('img') as HTMLImageElement
+    this.thumbnail.src = thumbUrl
+    this.thumbnail.crossOrigin = "anonymous"
+    this.thumbnail.alt = this.gawd.name
+    this.thumbnail.style.width = "100%"
+    this.thumbnail.style.height = "100%"
+    this.thumbnail.style.position = "absolute"
+    this.thumbnail.style.left = "0"
+    this._props.container.appendChild(this.thumbnail)
   }
 
   private initMedia(asset: GawdAsset): void {
@@ -234,9 +264,9 @@ export default class Player {
 
       this.spatialPlayer = new SpatialPlayer(texture, null, this._props.spatialProps)
       this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
+      this.spatialPlayer.quiltAngle = this.targetAngle = this.totalAngles / 2 // starting angle
       this.scene.add(this.spatialPlayer)
       
-
       let dist = this.camera.position.z - this.spatialPlayer.position.z
       let height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
       this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
@@ -251,6 +281,9 @@ export default class Player {
       this.video.style.display = ''
       this._props.enableMouseMove = false
     }
+
+    this.hideThumbnail = true
+    this.thumbCurTime = 0
   }
 
   private async loadGawdConfig(url: string): Promise<any> {
@@ -265,18 +298,28 @@ export default class Player {
       this.aniCurTime = 0
     }
   }
-  
-  private render(): void {
-    if (this._props.enableMouseMove)
-    {
-      this.aniCurTime += this.clock.getDelta()
 
-      if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1) {
+  private render(): void {
+    let delta = this.clock.getDelta()
+    if (this._props.enableMouseMove) {
+      this.aniCurTime += delta
+
+      if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1 && this.thumbnail.style.opacity == "0") {
         this.spatialPlayer.quiltAngle = Math.round(this.lerp(
           this.startAngle, 
           this.targetAngle,
           this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)
         ))
+      }
+    }
+
+    if (this.hideThumbnail) {
+      this.thumbCurTime += delta
+
+      if (this.spatialPlayer && this.thumbnail && this.thumbnail.style.opacity != "0") {
+        this.thumbnail.style.opacity = this.lerp(1, 0,
+          this.EasingFunctions.linear(this.thumbCurTime / 0.4)
+        ).toString()
       }
     }
     
@@ -288,6 +331,10 @@ export default class Player {
     amount = amount > 1 ? 1 : amount;
     return value1 + (value2 - value1) * amount;
   }
+
+  private delay(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
+  } 
 
   public dispose(): void
   {
