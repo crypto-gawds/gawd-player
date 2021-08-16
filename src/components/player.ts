@@ -172,14 +172,17 @@ export default class Player {
     this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
   }
 
+  private isMobile(): boolean {
+    const result = detect()
+    return result.os.match(/iOS|android/i) != null
+  }
+
   private initGawd(gawd: Gawd): void {
     this.gawd = gawd
-
-    const result = detect()
     let defaultAsset: GawdAsset = null;
 
     // Default mobile asset 
-    if (result.os.match(/iOS|android/i)) {
+    if (this.isMobile()) {
       defaultAsset = gawd.assets.filter(a =>
         a.spatial == this._props.defaultMobileAsset.spatial &&
         a.size.width == this._props.defaultMobileAsset.size.width &&
@@ -267,7 +270,6 @@ export default class Player {
       this.video.style.height = "100%"
       this.video.style.display = "none"
       this.props.container.appendChild(this.video);
-
     }
     
     if (onLoad) {
@@ -323,6 +325,7 @@ export default class Player {
 
       if (this.video && this.video.style.display == '') {
         this.video.style.display = 'none'
+        this.video.pause()
         this.renderer.domElement.style.display = ''
         this.spatialPlayer.stereoMode = StereoMode.OFF
       }
