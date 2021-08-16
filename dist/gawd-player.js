@@ -558,14 +558,17 @@
         this.video.style.height = "100%";
         this.video.style.display = "none";
         this.props.container.appendChild(this.video);
-
-        if (onLoad) {
-          this.video.oncanplay = onLoad();
-        }
       }
 
       this.video.src = asset.url;
       this.video.play();
+
+      if (onLoad) {
+        this.video.oncanplaythrough = function () {
+          onLoad();
+          this.video.oncanplaythrough = null;
+        }.bind(this);
+      }
     }
 
     loadSpatialPlayer(texture, asset) {
@@ -670,7 +673,7 @@
         this.thumbCurTime += delta;
 
         if (this.thumbnail && this.thumbnail.style.opacity != "0") {
-          this.thumbnail.style.opacity = this.lerp(1, 0, this.EasingFunctions.linear(this.thumbCurTime / 0.3)).toString();
+          this.thumbnail.style.opacity = this.lerp(1, 0, this.EasingFunctions.linear(this.thumbCurTime / 0.25)).toString();
         }
       }
 

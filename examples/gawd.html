@@ -10,18 +10,18 @@
       color: #fff;
       padding: 0;
       margin: 0;
-      overflow: hidden;
+      /* overflow: hidden; */
       font-family: Helvetica, Arial, sans-serif;
       text-align: center;
     }
 
+    video {
+      width: 400px;
+      height: 400px;
+    }
     a {
       color: #ff00ff;
       text-decoration: none
-    }
-
-    video {
-      display: none;
     }
 
     #info {
@@ -30,10 +30,10 @@
       width: 100%;
     }
 
-    #gawd-container {
+    #gawd-container1, #gawd-container2{
       margin: 80px auto;
-      width: 540;
-      height: 540;
+      width: 800;
+      height: 800;
       /* background: #ff00ff; */
 
       border: 10px solid #fff;
@@ -66,15 +66,139 @@
 
 <body>
 
-  <div id="gawd-container"></div>
+  <div id="gawd-container1"></div>
+  <!-- <div id="gawd-container2"></div> -->
   <!-- <video id="video" crossOrigin="anonymous" muted autoplay loop playsinline src="" /> -->
 
   <script>
     'use strict';
-    new CryptoGawd.Player({
-      container: document.getElementById('gawd-container'),
-      url: "" // URL for json file here
+    let player = new CryptoGawd.Player({
+      container: document.getElementById('gawd-container1'),
+      toggleModes: false,
+      url: "https://gateway.pinata.cloud/ipfs/QmU4atsYzCVynRBxhoh5ywEhFN7XZHGgxWvru53pctBE9x",
+//       gawdData: {
+//     "hash": "7ec33b22491f7bc356c95efd9b269e7ab00ea145abb70aee8b3baa3f33caead1",
+//     "image": "https://ipfs.io/ipfs/QmeCGHMmAUToCMnfjaq6Mi2LSqqqBmyJn7oHCDHZeytnFu",
+//     "animation_url": "https://ipfs.io/ipfs/QmZbPEm7DbpK4R5vaMPhFbqdjTVnF8GD2JDkD3ftmUQ1Aj",
+//     "seller_fee_basis_points": 200,
+//     "fee_recipient": "0x77De7bE18eec5C3c1B1a874816506ea594A5B1D7",
+//     "assets": [
+//         {
+//             "viewSize": {
+//                 "width": 540,
+//                 "height": 540
+//             },
+//             "quilt": {
+//                 "columns": 8,
+//                 "rows": 8
+//             },
+//             "url": "https://ipfs.io/ipfs/QmYfibYbVqj28SPUqrW9UNCDMDMp8JL1TGzgKnG5L2AEzL",
+//             "size": {
+//                 "width": 4320,
+//                 "height": 4320
+//             },
+//             "contentType": "video/mp4",
+//             "fileSize": 55857341,
+//             "quiltType": "FourKSquare",
+//             "spatial": "lookingglass"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmedjcqAJELawNFubPbtyo6M3Hjcd4xd2AMn4TQdsTXGLB",
+//             "size": {
+//                 "width": 3840,
+//                 "height": 3840
+//             },
+//             "contentType": "video/mp4",
+//             "fileSize": 13605871,
+//             "spatial": "2d"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmZhSyXH7tAo2jU5hkXbyCkRddpNHckgiom8g3B2akRUvo",
+//             "size": {
+//                 "width": 1920,
+//                 "height": 1920
+//             },
+//             "contentType": "video/mp4",
+//             "fileSize": 4997204,
+//             "spatial": "2d"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmZbPEm7DbpK4R5vaMPhFbqdjTVnF8GD2JDkD3ftmUQ1Aj",
+//             "size": {
+//                 "width": 1080,
+//                 "height": 1080
+//             },
+//             "contentType": "video/mp4",
+//             "fileSize": 2670229,
+//             "spatial": "2d"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmREy3udAiWEF8N37AxGUgshZVd35k83qr9DwEUYuW1SQb",
+//             "size": {
+//                 "width": 500,
+//                 "height": 500
+//             },
+//             "contentType": "image/gif",
+//             "fileSize": 6974346,
+//             "spatial": "2d"
+//         },
+//         {
+//             "viewSize": {
+//                 "width": 540,
+//                 "height": 540
+//             },
+//             "quilt": {
+//                 "columns": 8,
+//                 "rows": 8
+//             },
+//             "url": "https://ipfs.io/ipfs/QmRVW28zQhmjyvH8np6FQLWFLxi4vNJbPZ89gP6ck4WFwq",
+//             "size": {
+//                 "width": 4320,
+//                 "height": 4320
+//             },
+//             "contentType": "image/png",
+//             "fileSize": 6271793,
+//             "quiltType": "FourKSquare",
+//             "spatial": "lookingglass"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmfQudNoVGbZg86py6jXPjhAu7qGeFyjNLuHSGEEkdL3hs",
+//             "size": {
+//                 "width": 1920,
+//                 "height": 1920
+//             },
+//             "contentType": "image/png",
+//             "fileSize": 1249730,
+//             "spatial": "2d"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmeCGHMmAUToCMnfjaq6Mi2LSqqqBmyJn7oHCDHZeytnFu",
+//             "size": {
+//                 "width": 1080,
+//                 "height": 1080
+//             },
+//             "contentType": "image/png",
+//             "fileSize": 542079,
+//             "spatial": "2d"
+//         },
+//         {
+//             "url": "https://ipfs.io/ipfs/QmVYEqPho32RC7Dz2fVoCdMeVwUUFGkpYpSc744Ptctubi",
+//             "size": {
+//                 "width": 640,
+//                 "height": 640
+//             },
+//             "contentType": "image/png",
+//             "fileSize": 243082,
+//             "spatial": "2d"
+//         }
+//     ],
+//     "version": "0.9.7"
+// }
     });
+
+    window.onclick = function() {
+      // player.dispose();
+    }
   </script>
 </body>
 
