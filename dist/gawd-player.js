@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('three-spatial-viewer'), require('three')) :
   typeof define === 'function' && define.amd ? define(['exports', 'three-spatial-viewer', 'three'], factory) :
-  (global = global || self, factory(global.CryptoGawd = {}, global.SpatialViewer, global.THREE));
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.CryptoGawd = {}, global.SpatialViewer, global.THREE));
 }(this, (function (exports, threeSpatialViewer, three) { 'use strict';
 
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -458,14 +458,18 @@
       this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight);
     }
 
+    isMobile() {
+      var result = detect();
+      return result.os.match(/iOS|android/i) != null;
+    }
+
     initGawd(gawd) {
       var _this3 = this;
 
       this.gawd = gawd;
-      var result = detect();
       var defaultAsset = null; // Default mobile asset 
 
-      if (result.os.match(/iOS|android/i)) {
+      if (this.isMobile()) {
         defaultAsset = gawd.assets.filter(function (a) {
           return a.spatial == _this3._props.defaultMobileAsset.spatial && a.size.width == _this3._props.defaultMobileAsset.size.width && (a.quiltType == _this3._props.defaultMobileAsset.quiltType || !_this3._props.defaultMobileAsset.quiltType) && a.contentType == _this3._props.defaultMobileAsset.contentType;
         })[0];
@@ -610,6 +614,7 @@
 
         if (this.video && this.video.style.display == '') {
           this.video.style.display = 'none';
+          this.video.pause();
           this.renderer.domElement.style.display = '';
           this.spatialPlayer.stereoMode = threeSpatialViewer.StereoMode.OFF;
         } else if (this.spatialPlayer.stereoMode == threeSpatialViewer.StereoMode.OFF) {

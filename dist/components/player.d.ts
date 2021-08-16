@@ -60,6 +60,7 @@ export default class Player {
     private setProps;
     private initThree;
     private resize;
+    private isMobile;
     private initGawd;
     private initThumbnail;
     private hideThumb;
