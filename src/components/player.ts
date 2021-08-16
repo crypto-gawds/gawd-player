@@ -271,14 +271,19 @@ export default class Player {
       this.video.style.display = "none"
       this.props.container.appendChild(this.video);
       
-      if (onLoad) {
-        this.video.oncanplay = onLoad()
-      }
     }
 
     this.video.src = asset.url
     this.video.play();
+
+    if (onLoad) {
+      this.video.oncanplaythrough = function() {
+        onLoad()
+        this.video.oncanplaythrough = null
+      }.bind(this)
+    }
   }
+  
 
   private loadSpatialPlayer(texture: Texture, asset: GawdAsset): void {
     let config = new QuiltConfig();
@@ -389,7 +394,7 @@ export default class Player {
       
       if (this.thumbnail && this.thumbnail.style.opacity != "0") {
         this.thumbnail.style.opacity = this.lerp(1, 0,
-          this.EasingFunctions.linear(this.thumbCurTime / 0.3)
+          this.EasingFunctions.linear(this.thumbCurTime / 0.25)
         ).toString()
       }
     }
