@@ -557,14 +557,17 @@ class Player {
       this.props.container.appendChild(this.video);
     }
 
-    this.video.src = asset.url;
-    this.video.play();
-
     if (onLoad) {
-      this.video.oncanplaythrough = function () {
-        onLoad();
-        this.video.oncanplaythrough = null;
+      this.video.ontimeupdate = function () {
+        if (this.video.currentTime > 0) {
+          onLoad();
+          this.video.ontimeupdate = null;
+          onLoad = null;
+        }
       }.bind(this);
+
+      this.video.src = asset.url;
+      this.video.play();
     }
   }
 
