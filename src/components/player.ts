@@ -43,7 +43,7 @@ class Gawd {
   public hash: string
   public assets: Array<GawdAsset>
 
-  public constructor(init?:Partial<Gawd>) {
+  public constructor(init?: Partial<Gawd>) {
     Object.assign(this, init);
   }
 }
@@ -56,8 +56,8 @@ class GawdAsset {
   public size: Resolution
   public viewSize: Resolution
   public contentType: string
-  
-  public constructor(init?:Partial<GawdAsset>) {
+
+  public constructor(init?: Partial<GawdAsset>) {
     Object.assign(this, init);
   }
 }
@@ -66,7 +66,7 @@ class GawdQuilt {
   public columns: number
   public rows: number
 
-  public constructor(init?:Partial<GawdQuilt>) {
+  public constructor(init?: Partial<GawdQuilt>) {
     Object.assign(this, init);
   }
 }
@@ -75,7 +75,7 @@ class Resolution {
   public width: number
   public height: number
 
-  public constructor(init?:Partial<Resolution>) {
+  public constructor(init?: Partial<Resolution>) {
     Object.assign(this, init);
   }
 }
@@ -106,7 +106,7 @@ export default class Player {
 
   constructor(props?: Props) {
     this.setProps(this._props, props)
-    
+
     this.clock = new Clock();
 
     if (!this._props.container) {
@@ -139,10 +139,9 @@ export default class Player {
       }
     }
   }
-  
+
   private initThree(): void {
-    if (!this.scene)
-    {
+    if (!this.scene) {
       this.scene = new Scene();
 
       this.renderer = new WebGLRenderer({ antialias: true });
@@ -152,9 +151,9 @@ export default class Player {
       this.camera = new PerspectiveCamera(90, this.aspectRatio, 0.01, 1000);
       this.camera.position.z = 10;
       this.scene.add(this.camera);
-      
+
       this.resize()
-      
+
       this.renderer.setAnimationLoop(() => {
         this.render()
       });
@@ -167,8 +166,7 @@ export default class Player {
     }
   }
 
-  private resize(): void
-  {
+  private resize(): void {
     this.camera.aspect = this.aspectRatio
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(this._props.container.clientWidth, this._props.container.clientHeight)
@@ -182,20 +180,20 @@ export default class Player {
 
     // Default mobile asset 
     if (result.os.match(/iOS|android/i)) {
-      defaultAsset = gawd.assets.filter(a => 
-        a.spatial == this._props.defaultMobileAsset.spatial && 
-        a.size.width == this._props.defaultMobileAsset.size.width && 
-        (a.quiltType == this._props.defaultMobileAsset.quiltType || !this._props.defaultMobileAsset.quiltType)  && 
+      defaultAsset = gawd.assets.filter(a =>
+        a.spatial == this._props.defaultMobileAsset.spatial &&
+        a.size.width == this._props.defaultMobileAsset.size.width &&
+        (a.quiltType == this._props.defaultMobileAsset.quiltType || !this._props.defaultMobileAsset.quiltType) &&
         a.contentType == this._props.defaultMobileAsset.contentType)[0]
     }
-    
+
     // Default desktop asset
     if (!defaultAsset) {
-      defaultAsset = gawd.assets.filter(a => 
-        a.spatial == this._props.defaultAsset.spatial && 
-        a.size.width == this._props.defaultAsset.size.width && 
-        (a.quiltType == this._props.defaultAsset.quiltType || !this._props.defaultAsset.quiltType)  && 
-        a.contentType == this._props.defaultAsset.contentType )[0]
+      defaultAsset = gawd.assets.filter(a =>
+        a.spatial == this._props.defaultAsset.spatial &&
+        a.size.width == this._props.defaultAsset.size.width &&
+        (a.quiltType == this._props.defaultAsset.quiltType || !this._props.defaultAsset.quiltType) &&
+        a.contentType == this._props.defaultAsset.contentType)[0]
     }
 
     this.initThumbnail()
@@ -205,11 +203,11 @@ export default class Player {
   private initThumbnail(): void {
     // Get preferred thumb size
     // if not, found it will use the next smallest thumb
-    let thumbUrl = this.gawd.assets                      
+    let thumbUrl = this.gawd.assets
       .sort((a1, a2) => a1.size.width - a2.size.width)
       .find((asset) => asset.contentType == 'image/png' && asset.size.width >= this._props.defaultThumbnailSize).url
 
-    this.thumbnail =  document.createElement('img') as HTMLImageElement
+    this.thumbnail = document.createElement('img') as HTMLImageElement
     this.thumbnail.src = thumbUrl
     this.thumbnail.crossOrigin = "anonymous"
     this.thumbnail.style.width = "100%"
@@ -224,7 +222,7 @@ export default class Player {
     this.thumbCurTime = 0
   }
 
-  private initMedia(asset: GawdAsset, onLoad?:() => void): void {
+  private initMedia(asset: GawdAsset, onLoad?: () => void): void {
     if (!asset) {
       console.warn("No GawdAsset found!");
       return
@@ -252,12 +250,11 @@ export default class Player {
     }
   }
 
-  private initVideo(asset: GawdAsset, onLoad?:() => any): void {
+  private initVideo(asset: GawdAsset, onLoad?: () => any): void {
     const videoId = "gawd-video-" + this.gawd.hash
     this.video = document.getElementById(videoId) as HTMLVideoElement
 
-    if (!this.video)
-    {
+    if (!this.video) {
       this.video = document.createElement('video') as HTMLVideoElement
       this.video.id = videoId
       this.video.crossOrigin = "anonymous"
@@ -270,28 +267,30 @@ export default class Player {
       this.video.style.height = "100%"
       this.video.style.display = "none"
       this.props.container.appendChild(this.video);
-      
+
     }
-
-    this.video.src = asset.url
-    this.video.play();
-
+    
     if (onLoad) {
-      this.video.oncanplaythrough = function() {
-        onLoad()
-        this.video.oncanplaythrough = null
+      this.video.ontimeupdate = function () {
+        if (this.video.currentTime > 0) {
+          onLoad()
+          this.video.ontimeupdate = null
+          onLoad = null
+        }
       }.bind(this)
+
+      this.video.src = asset.url
+      this.video.play();
     }
   }
-  
+
 
   private loadSpatialPlayer(texture: Texture, asset: GawdAsset): void {
     let config = new QuiltConfig();
 
     this.initThree()
 
-    if (asset.quilt)
-    {
+    if (asset.quilt) {
       config.columns = asset.quilt.columns > 0 ? asset.quilt.columns : 8
       config.rows = asset.quilt.rows > 0 ? asset.quilt.rows : 6
       config.width = asset.viewSize.width > 0 ? asset.viewSize.width : 480
@@ -302,7 +301,7 @@ export default class Player {
       this.totalAngles = this.spatialPlayer.quiltColumns * this.spatialPlayer.quiltRows
       this.spatialPlayer.quiltAngle = this.targetAngle = this.totalAngles / 2 // starting angle
       this.scene.add(this.spatialPlayer)
-      
+
       let dist = this.camera.position.z - this.spatialPlayer.position.z
       let height = this.aspectRatio; // desired height to fit WHY IS THIS CALLED HEIGHT?
       this.camera.fov = Math.atan(height / dist) * (180 / Math.PI)
@@ -312,8 +311,7 @@ export default class Player {
         window.addEventListener('mousemove', this.onMouseMove.bind(this))
       }
     }
-    else
-    {
+    else {
       this.video.style.display = ''
       this._props.enableMouseMove = false
     }
@@ -340,7 +338,7 @@ export default class Player {
     }
     else {
       this._props.enableMouseMove = true
-      this.initMedia(this.getQuiltPNGAsset(), function() {
+      this.initMedia(this.getQuiltPNGAsset(), function () {
         this.video.style.display = 'none'
         this.renderer.domElement.style.display = ''
         this.spatialPlayer.stereoMode = StereoMode.OFF
@@ -349,17 +347,17 @@ export default class Player {
   }
 
   private getQuiltPNGAsset(): GawdAsset {
-    return this.gawd.assets                      
+    return this.gawd.assets
       .find((asset) => asset.contentType == 'image/png'
-                    && asset.quiltType == 'FourKSquare')
+        && asset.quiltType == 'FourKSquare')
   }
 
   private getAnimationAsset(): GawdAsset {
-    return this.gawd.assets                      
+    return this.gawd.assets
       .sort((a1, a2) => a2.size.width - a1.size.width)
-      .find((asset) => asset.contentType == this._props.animationAsset.contentType 
-                    && asset.size.width <= this._props.animationAsset.size.width
-                    && asset.spatial == this._props.animationAsset.spatial)
+      .find((asset) => asset.contentType == this._props.animationAsset.contentType
+        && asset.size.width <= this._props.animationAsset.size.width
+        && asset.spatial == this._props.animationAsset.spatial)
   }
 
   private async loadGawdConfig(url: string): Promise<any> {
@@ -382,7 +380,7 @@ export default class Player {
 
       if (this.spatialPlayer && this.aniCurTime / this.aniDuration <= 1 && this.thumbnail.style.opacity == "0") {
         this.spatialPlayer.quiltAngle = Math.round(this.lerp(
-          this.startAngle, 
+          this.startAngle,
           this.targetAngle,
           this.EasingFunctions.easeOutCubic(this.aniCurTime / this.aniDuration)
         ))
@@ -391,14 +389,14 @@ export default class Player {
 
     if (this.hideThumbnail) {
       this.thumbCurTime += delta
-      
+
       if (this.thumbnail && this.thumbnail.style.opacity != "0") {
         this.thumbnail.style.opacity = this.lerp(1, 0,
           this.EasingFunctions.linear(this.thumbCurTime / 0.25)
         ).toString()
       }
     }
-    
+
     if (this.scene) {
       this.renderer.render(this.scene, this.camera)
     }
@@ -410,8 +408,7 @@ export default class Player {
     return value1 + (value2 - value1) * amount;
   }
 
-  public dispose(): void
-  {
+  public dispose(): void {
     if (this.scene) {
       this.scene.remove(this.spatialPlayer)
     }
@@ -436,28 +433,28 @@ export default class Player {
     // no easing, no acceleration
     linear: t => t,
     // accelerating from zero velocity
-    easeInQuad: t => t*t,
+    easeInQuad: t => t * t,
     // decelerating to zero velocity
-    easeOutQuad: t => t*(2-t),
+    easeOutQuad: t => t * (2 - t),
     // acceleration until halfway, then deceleration
-    easeInOutQuad: t => t<.5 ? 2*t*t : -1+(4-2*t)*t,
+    easeInOutQuad: t => t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
     // accelerating from zero velocity 
-    easeInCubic: t => t*t*t,
+    easeInCubic: t => t * t * t,
     // decelerating to zero velocity 
-    easeOutCubic: t => (--t)*t*t+1,
+    easeOutCubic: t => (--t) * t * t + 1,
     // acceleration until halfway, then deceleration 
-    easeInOutCubic: t => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1,
+    easeInOutCubic: t => t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
     // accelerating from zero velocity 
-    easeInQuart: t => t*t*t*t,
+    easeInQuart: t => t * t * t * t,
     // decelerating to zero velocity 
-    easeOutQuart: t => 1-(--t)*t*t*t,
+    easeOutQuart: t => 1 - (--t) * t * t * t,
     // acceleration until halfway, then deceleration
-    easeInOutQuart: t => t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t,
+    easeInOutQuart: t => t < .5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t,
     // accelerating from zero velocity
-    easeInQuint: t => t*t*t*t*t,
+    easeInQuint: t => t * t * t * t * t,
     // decelerating to zero velocity
-    easeOutQuint: t => 1+(--t)*t*t*t*t,
+    easeOutQuint: t => 1 + (--t) * t * t * t * t,
     // acceleration until halfway, then deceleration 
-    easeInOutQuint: t => t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t
+    easeInOutQuint: t => t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t
   }
 }
