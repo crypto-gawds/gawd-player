@@ -31,7 +31,7 @@ Setup your HTML
 ```html
 <style>
   /* Portrait layout */
-  #gawd-container { 
+  #gawd-container {
     width: 480;
     height: 640;
   }
@@ -59,4 +59,14 @@ props.container = gawdContainerEl
 props.url = gawdJsonUrl
 
 new Player(props);
+```
+
+# Development
+
+```js
+// When finished making changes
+yarn build
+
+// Or while developing
+yarn build:watch
 ```
