@@ -353,23 +353,23 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
         easeInOutQuad: function easeInOutQuad(t) {
           return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
         },
-        // accelerating from zero velocity 
+        // accelerating from zero velocity
         easeInCubic: function easeInCubic(t) {
           return t * t * t;
         },
-        // decelerating to zero velocity 
+        // decelerating to zero velocity
         easeOutCubic: function easeOutCubic(t) {
           return --t * t * t + 1;
         },
-        // acceleration until halfway, then deceleration 
+        // acceleration until halfway, then deceleration
         easeInOutCubic: function easeInOutCubic(t) {
           return t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
         },
-        // accelerating from zero velocity 
+        // accelerating from zero velocity
         easeInQuart: function easeInQuart(t) {
           return t * t * t * t;
         },
-        // decelerating to zero velocity 
+        // decelerating to zero velocity
         easeOutQuart: function easeOutQuart(t) {
           return 1 - --t * t * t * t;
         },
@@ -385,7 +385,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
         easeOutQuint: function easeOutQuint(t) {
           return 1 + --t * t * t * t * t;
         },
-        // acceleration until halfway, then deceleration 
+        // acceleration until halfway, then deceleration
         easeInOutQuint: function easeInOutQuint(t) {
           return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * --t * t * t * t * t;
         }
@@ -463,7 +463,7 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
       var _this3 = this;
 
       this.gawd = gawd;
-      var defaultAsset = null; // Default mobile asset 
+      var defaultAsset = null; // Default mobile asset
 
       if (this.isMobile()) {
         defaultAsset = gawd.assets.filter(function (a) {
@@ -699,6 +699,18 @@ define(['exports', 'three-spatial-viewer', 'three'], function (exports, threeSpa
 
       if (this.spatialPlayer) {
         this.spatialPlayer.dispose();
+      }
+
+      if (this.thumbnail) {
+        this.thumbnail.remove();
+      }
+
+      if (this.video) {
+        this.video.remove();
+      }
+
+      if (this.renderer?.domElement) {
+        this.renderer.domElement.remove();
       }
 
       window.removeEventListener('mousemove', this.onMouseMove.bind(this));

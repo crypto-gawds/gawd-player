@@ -31,9 +31,9 @@
     }
 
     #gawd-container1, #gawd-container2{
-      margin: 80px auto;
-      width: 800;
-      height: 800;
+      /* margin: 80px auto; */
+      width: 400;
+      height: 400;
       /* background: #ff00ff; */
 
       border: 10px solid #fff;
@@ -61,10 +61,12 @@
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://caseypugh.github.io/three-spatial-viewer/dist/three-spatial-viewer.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
-  <script src="../dist/gawd-player.js"></script>
+  <script src="../dist/gawd-player.js?v=d8ddDdddde35ddd9833"></script>
 </head>
 
 <body>
+
+  <div id="debug"></div>
 
   <div id="gawd-container1"></div>
   <!-- <div id="gawd-container2"></div> -->
@@ -74,7 +76,7 @@
     'use strict';
     let player = new CryptoGawd.Player({
       container: document.getElementById('gawd-container1'),
-      toggleModes: false,
+      toggleModes: true,
       url: "https://gateway.pinata.cloud/ipfs/QmU4atsYzCVynRBxhoh5ywEhFN7XZHGgxWvru53pctBE9x",
 //       gawdData: {
 //     "hash": "7ec33b22491f7bc356c95efd9b269e7ab00ea145abb70aee8b3baa3f33caead1",

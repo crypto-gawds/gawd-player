@@ -181,7 +181,7 @@ export default class Player {
     this.gawd = gawd
     let defaultAsset: GawdAsset = null;
 
-    // Default mobile asset 
+    // Default mobile asset
     if (this.isMobile()) {
       defaultAsset = gawd.assets.filter(a =>
         a.spatial == this._props.defaultMobileAsset.spatial &&
@@ -271,7 +271,7 @@ export default class Player {
       this.video.style.display = "none"
       this.props.container.appendChild(this.video);
     }
-    
+
     if (onLoad) {
       this.video.ontimeupdate = function () {
         if (this.video.currentTime > 0) {
@@ -420,6 +420,18 @@ export default class Player {
       this.spatialPlayer.dispose()
     }
 
+    if (this.thumbnail) {
+      this.thumbnail.remove()
+    }
+
+    if (this.video) {
+      this.video.remove()
+    }
+
+    if (this.renderer?.domElement) {
+      this.renderer.domElement.remove()
+    }
+
     window.removeEventListener('mousemove', this.onMouseMove.bind(this))
     window.removeEventListener('resize', this.resize.bind(this))
   }
@@ -441,15 +453,15 @@ export default class Player {
     easeOutQuad: t => t * (2 - t),
     // acceleration until halfway, then deceleration
     easeInOutQuad: t => t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
-    // accelerating from zero velocity 
+    // accelerating from zero velocity
     easeInCubic: t => t * t * t,
-    // decelerating to zero velocity 
+    // decelerating to zero velocity
     easeOutCubic: t => (--t) * t * t + 1,
-    // acceleration until halfway, then deceleration 
+    // acceleration until halfway, then deceleration
     easeInOutCubic: t => t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
-    // accelerating from zero velocity 
+    // accelerating from zero velocity
     easeInQuart: t => t * t * t * t,
-    // decelerating to zero velocity 
+    // decelerating to zero velocity
     easeOutQuart: t => 1 - (--t) * t * t * t,
     // acceleration until halfway, then deceleration
     easeInOutQuart: t => t < .5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t,
@@ -457,7 +469,7 @@ export default class Player {
     easeInQuint: t => t * t * t * t * t,
     // decelerating to zero velocity
     easeOutQuint: t => 1 + (--t) * t * t * t * t,
-    // acceleration until halfway, then deceleration 
+    // acceleration until halfway, then deceleration
     easeInOutQuint: t => t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t
   }
 }
