@@ -1,5 +1,5 @@
 {
-  "version": "0.1.4",
+  "version": "0.1.5",
   "name": "gawd-player",
   "description": "A plugin for viewing Crypto Gawds in their various formats",
   "main": "dist/gawd-player.js",
@@ -23,7 +23,7 @@
     "@babel/preset-typescript": "7.3.3",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-node-resolve": "^13.0.0",
-    "@types/three": "^0.129.1",
+    "@types/three": "^0.140.0",
     "@typescript-eslint/eslint-plugin": "2.0.0",
     "@typescript-eslint/parser": "2.0.0",
     "add": "2.0.6",

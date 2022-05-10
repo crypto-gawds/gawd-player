@@ -64,9 +64,12 @@ new Player(props);
 # Development
 
 ```js
-// When finished making changes
-yarn build
-
 // Or while developing
 yarn build:watch
+
+// When finished making changes, compile all the distribution files
+yarn build
+
+// After you commit your changes, pull the new changes into your project
+yarn upgrade gawd-player
 ```
